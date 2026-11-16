@@ -1,4 +1,3 @@
-#include <complex>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -44,12 +43,6 @@ TEST_CASE("vector<float>: zero filled") {
 }
 TEST_CASE("vector<double>: zero filled") {
     sized_vector_is_zero_filled<double>();
-}
-TEST_CASE("vector<complex<float>>: zero filled") {
-    sized_vector_is_zero_filled<std::complex<float>>();
-}
-TEST_CASE("vector<complex<double>>: zero filled") {
-    sized_vector_is_zero_filled<std::complex<double>>();
 }
 TEST_CASE("vector: default is empty") {
     const lazuli::vector<double> values;
@@ -212,31 +205,20 @@ TEST_CASE("vector: const column view is const") {
     static_assert(std::is_const_v<std::remove_reference_t<decltype(column(0, 0))>>);
     REQUIRE(column(0, 0) == 1.0);
 }
-TEST_CASE("vector: storage is cache line aligned") {
-    const lazuli::vector<float> narrow{1.0F};
-    const lazuli::vector<double> wide{1.0};
-    const lazuli::vector<std::complex<float>> single{std::complex<float>{1.0F, 2.0F}};
-    const lazuli::vector<std::complex<double>> full{std::complex<double>{1.0, 2.0}};
-    INFO("float");
-    REQUIRE(reinterpret_cast<std::uintptr_t>(narrow.data()) % cache_line == 0);
-    INFO("double");
-    REQUIRE(reinterpret_cast<std::uintptr_t>(wide.data()) % cache_line == 0);
-    INFO("complex float");
-    REQUIRE(reinterpret_cast<std::uintptr_t>(single.data()) % cache_line == 0);
-    INFO("complex double");
-    REQUIRE(reinterpret_cast<std::uintptr_t>(full.data()) % cache_line == 0);
-}
 TEST_CASE("vector<float>: scalar round trip") {
     scalar_type_round_trips<float>();
 }
 TEST_CASE("vector<double>: scalar round trip") {
     scalar_type_round_trips<double>();
 }
-TEST_CASE("vector<complex<float>>: scalar round trip") {
-    scalar_type_round_trips<std::complex<float>>();
-}
-TEST_CASE("vector<complex<double>>: scalar round trip") {
-    scalar_type_round_trips<std::complex<double>>();
+
+TEST_CASE("vector: storage is cache line aligned") {
+    const lazuli::vector<float> narrow{1.0F};
+    const lazuli::vector<double> wide{1.0};
+    INFO("float");
+    REQUIRE(reinterpret_cast<std::uintptr_t>(narrow.data()) % cache_line == 0);
+    INFO("double");
+    REQUIRE(reinterpret_cast<std::uintptr_t>(wide.data()) % cache_line == 0);
 }
 
 }  // namespace

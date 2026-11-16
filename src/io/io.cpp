@@ -1,18 +1,21 @@
 #include <array>
 #include <bit>
-#include <complex>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <expected>
 #include <filesystem>
 #include <fstream>
+#include <ios>
 #include <limits>
 #include <string>
 #include <string_view>
 #include <utility>
 
+#include "lazuli/core/error.hpp"
 #include "lazuli/io/io.hpp"
+#include "lazuli/matrix/matrix.hpp"
+#include "lazuli/matrix/view.hpp"
 
 namespace lazuli::detail::io {
 
@@ -39,16 +42,6 @@ struct tag_of<float> {
 template <>
 struct tag_of<double> {
     static constexpr scalar_tag value = scalar_tag::float64;
-};
-
-template <>
-struct tag_of<std::complex<float>> {
-    static constexpr scalar_tag value = scalar_tag::complex64;
-};
-
-template <>
-struct tag_of<std::complex<double>> {
-    static constexpr scalar_tag value = scalar_tag::complex128;
 };
 
 [[nodiscard]] error make_error(std::string message) {
@@ -166,22 +159,18 @@ template <typename T>
 
 }  // namespace
 
-template <typename T>
+template <scalar T>
 std::expected<matrix<T>, error> load(const std::filesystem::path& path) {
     return load_file<T>(path);
 }
 
-template <typename T>
+template <scalar T>
 std::expected<void, error> save(const std::filesystem::path& path, matrix_view<T> data) {
     return save_file<std::remove_const_t<T>>(path, data);
 }
 
 template std::expected<matrix<float>, error> load<float>(const std::filesystem::path&);
 template std::expected<matrix<double>, error> load<double>(const std::filesystem::path&);
-template std::expected<matrix<std::complex<float>>, error> load<std::complex<float>>(
-    const std::filesystem::path&);
-template std::expected<matrix<std::complex<double>>, error> load<std::complex<double>>(
-    const std::filesystem::path&);
 
 template std::expected<void, error> save<float>(const std::filesystem::path&, matrix_view<float>);
 template std::expected<void, error> save<const float>(const std::filesystem::path&,
@@ -189,13 +178,5 @@ template std::expected<void, error> save<const float>(const std::filesystem::pat
 template std::expected<void, error> save<double>(const std::filesystem::path&, matrix_view<double>);
 template std::expected<void, error> save<const double>(const std::filesystem::path&,
                                                        matrix_view<const double>);
-template std::expected<void, error> save<std::complex<float>>(const std::filesystem::path&,
-                                                              matrix_view<std::complex<float>>);
-template std::expected<void, error> save<const std::complex<float>>(
-    const std::filesystem::path&, matrix_view<const std::complex<float>>);
-template std::expected<void, error> save<std::complex<double>>(const std::filesystem::path&,
-                                                               matrix_view<std::complex<double>>);
-template std::expected<void, error> save<const std::complex<double>>(
-    const std::filesystem::path&, matrix_view<const std::complex<double>>);
 
 }  // namespace lazuli::detail::io

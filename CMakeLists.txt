@@ -34,9 +34,7 @@ endfunction()
 add_library(
     lazuli STATIC
     src/core/error.cpp
-    src/io/io.cpp
-    src/matrix/matrix.cpp
-    src/matrix/vector.cpp)
+    src/io/io.cpp)
 add_library(lazuli::lazuli ALIAS lazuli)
 
 target_compile_features(lazuli PUBLIC cxx_std_23)

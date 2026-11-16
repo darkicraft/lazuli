@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <complex>
 #include <cstddef>
 #include <cstdint>
 
@@ -51,24 +50,6 @@ TEST_CASE("random: float bounds are respected") {
             REQUIRE(values(row, column) <= 1.0F);
         }
     }
-}
-
-TEST_CASE("random: complex values sample both parts") {
-    const auto values = lazuli::matrix<std::complex<double>>::random(16, 16, 11, {-1.0, 1.0});
-    bool any_imaginary = false;
-    for (std::size_t row = 0; row < values.rows(); ++row) {
-        for (std::size_t column = 0; column < values.cols(); ++column) {
-            const auto value = values(row, column);
-            REQUIRE(value.real() >= -1.0);
-            REQUIRE(value.real() <= 1.0);
-            REQUIRE(value.imag() >= -1.0);
-            REQUIRE(value.imag() <= 1.0);
-            if (value.imag() != 0.0) {
-                any_imaginary = true;
-            }
-        }
-    }
-    REQUIRE(any_imaginary);
 }
 
 TEST_CASE("random: degenerate shapes stay empty") {

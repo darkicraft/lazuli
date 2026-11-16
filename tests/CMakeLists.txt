@@ -27,6 +27,7 @@ add_executable(
     matrix/fill.cpp
     matrix/matrix.cpp
     matrix/random.cpp
+    matrix/scalar.cpp
     matrix/vector.cpp
     matrix/view.cpp)
 

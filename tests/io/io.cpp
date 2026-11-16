@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <complex>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -79,14 +78,6 @@ TEST_CASE("io: double round trip") {
 
 TEST_CASE("io: float round trip") {
     round_trip<float>("float");
-}
-
-TEST_CASE("io: complex float round trip") {
-    round_trip<std::complex<float>>("complex_float");
-}
-
-TEST_CASE("io: complex double round trip") {
-    round_trip<std::complex<double>>("complex_double");
 }
 
 TEST_CASE("io: degenerate shapes round trip") {

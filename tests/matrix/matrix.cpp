@@ -1,4 +1,3 @@
-#include <complex>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -48,12 +47,6 @@ TEST_CASE("matrix<float>: zero filled") {
 }
 TEST_CASE("matrix<double>: zero filled") {
     sized_matrix_is_zero_filled<double>();
-}
-TEST_CASE("matrix<complex<float>>: zero filled") {
-    sized_matrix_is_zero_filled<std::complex<float>>();
-}
-TEST_CASE("matrix<complex<double>>: zero filled") {
-    sized_matrix_is_zero_filled<std::complex<double>>();
 }
 TEST_CASE("matrix: default is empty") {
     const lazuli::matrix<double> matrix;
@@ -300,35 +293,24 @@ TEST_CASE("matrix: window bounds are checked") {
     REQUIRE_THROWS_AS(matrix.row(2), lazuli::out_of_bounds);
     REQUIRE_THROWS_AS(matrix.col(2), lazuli::out_of_bounds);
 }
-TEST_CASE("matrix: storage is cache line aligned") {
-    for (const auto& shape : {std::pair<std::size_t, std::size_t>{1, 1},
-                              std::pair<std::size_t, std::size_t>{3, 3},
-                              std::pair<std::size_t, std::size_t>{5, 7}}) {
-        const lazuli::matrix<float> narrow(shape.first, shape.second);
-        const lazuli::matrix<double> wide(shape.first, shape.second);
-        const lazuli::matrix<std::complex<float>> single(shape.first, shape.second);
-        const lazuli::matrix<std::complex<double>> full(shape.first, shape.second);
-        INFO("float");
-        REQUIRE(reinterpret_cast<std::uintptr_t>(narrow.data()) % cache_line == 0);
-        INFO("double");
-        REQUIRE(reinterpret_cast<std::uintptr_t>(wide.data()) % cache_line == 0);
-        INFO("complex float");
-        REQUIRE(reinterpret_cast<std::uintptr_t>(single.data()) % cache_line == 0);
-        INFO("complex double");
-        REQUIRE(reinterpret_cast<std::uintptr_t>(full.data()) % cache_line == 0);
-    }
-}
 TEST_CASE("matrix<float>: scalar round trip") {
     scalar_type_round_trips<float>();
 }
 TEST_CASE("matrix<double>: scalar round trip") {
     scalar_type_round_trips<double>();
 }
-TEST_CASE("matrix<complex<float>>: scalar round trip") {
-    scalar_type_round_trips<std::complex<float>>();
-}
-TEST_CASE("matrix<complex<double>>: scalar round trip") {
-    scalar_type_round_trips<std::complex<double>>();
+
+TEST_CASE("matrix: storage is cache line aligned") {
+    for (const auto& shape : {std::pair<std::size_t, std::size_t>{1, 1},
+                              std::pair<std::size_t, std::size_t>{3, 3},
+                              std::pair<std::size_t, std::size_t>{5, 7}}) {
+        const lazuli::matrix<float> narrow(shape.first, shape.second);
+        const lazuli::matrix<double> wide(shape.first, shape.second);
+        INFO("float");
+        REQUIRE(reinterpret_cast<std::uintptr_t>(narrow.data()) % cache_line == 0);
+        INFO("double");
+        REQUIRE(reinterpret_cast<std::uintptr_t>(wide.data()) % cache_line == 0);
+    }
 }
 
 }  // namespace

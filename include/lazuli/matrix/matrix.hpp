@@ -4,7 +4,6 @@
 /// @brief Row-major, contiguous, owning dense matrix.
 
 #include <algorithm>
-#include <complex>
 #include <concepts>
 #include <cstddef>
 #include <initializer_list>
@@ -12,12 +11,13 @@
 #include <utility>
 
 #include "lazuli/core/aligned.hpp"
+#include "lazuli/core/scalar.hpp"
 #include "lazuli/matrix/random.hpp"
 #include "lazuli/matrix/view.hpp"
 
 namespace lazuli::detail {
 
-template <typename T>
+template <scalar T>
 class matrix {
   public:
     using value_type = T;
@@ -178,10 +178,5 @@ class matrix {
     std::size_t m_cols = 0;
     aligned_buffer<T> m_buffer;
 };
-
-extern template class matrix<float>;
-extern template class matrix<double>;
-extern template class matrix<std::complex<float>>;
-extern template class matrix<std::complex<double>>;
 
 }  // namespace lazuli::detail

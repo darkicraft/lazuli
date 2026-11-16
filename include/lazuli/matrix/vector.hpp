@@ -11,11 +11,12 @@
 #include <utility>
 
 #include "lazuli/core/aligned.hpp"
+#include "lazuli/core/scalar.hpp"
 #include "lazuli/matrix/view.hpp"
 
 namespace lazuli::detail {
 
-template <typename T>
+template <scalar T>
 class vector {
   public:
     using value_type = T;
@@ -113,10 +114,5 @@ class vector {
   private:
     aligned_buffer<T> m_buffer;
 };
-
-extern template class vector<float>;
-extern template class vector<double>;
-extern template class vector<std::complex<float>>;
-extern template class vector<std::complex<double>>;
 
 }  // namespace lazuli::detail

@@ -8,6 +8,7 @@
 #include <type_traits>
 
 #include "lazuli/core/error.hpp"
+#include "lazuli/core/scalar.hpp"
 
 namespace lazuli::detail {
 
@@ -21,7 +22,7 @@ namespace lazuli::detail {
 ///
 /// Constness of the view object does not propagate to the elements:
 /// `matrix_view<const T>` is the read-only spelling, exactly like `std::span`.
-template <typename T>
+template <scalar T>
 class matrix_view {
   public:
     using element_type = T;

@@ -4,8 +4,6 @@
 /// acquire a throw expression, an implementation-level include, or a dependency
 /// on a transitive include.
 
-#include <complex>
-
 #include <lazuli/lazuli.hpp>
 
 namespace {
@@ -30,6 +28,4 @@ void exercise() {
 void lazuli_public_surface() {
     exercise<float>();
     exercise<double>();
-    exercise<std::complex<float>>();
-    exercise<std::complex<double>>();
 }
