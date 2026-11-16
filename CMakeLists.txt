@@ -14,6 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(LAZULI_BUILD_TESTS "Build the test suite" ON)
 option(LAZULI_BUILD_EXAMPLES "Build the examples" ON)
+option(LAZULI_BUILD_BENCH "Build the benchmark executables" ON)
 option(LAZULI_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 function(lazuli_set_warnings target)
@@ -45,6 +46,9 @@ target_include_directories(
            $<INSTALL_INTERFACE:include>)
 
 lazuli_set_warnings(lazuli)
+
+# The baseline implementation is the tests' yardstick, so it is always built.
+add_subdirectory(bench)
 
 if(LAZULI_BUILD_TESTS)
     enable_testing()
