@@ -4,6 +4,7 @@
 /// @brief Row-major, contiguous, owning one-dimensional array.
 
 #include <algorithm>
+#include <concepts>
 #include <cstddef>
 #include <initializer_list>
 #include <type_traits>
@@ -91,6 +92,22 @@ class vector {
             conditional_t<std::is_const_v<std::remove_reference_t<decltype(self)>>, const T, T>;
         return matrix_view<element>{
             self.data(), self.size(), std::size_t{1}, std::size_t{1}, self.size()};
+    }
+
+    /// Writes `value` to every element.
+    void fill(const T& value) {
+        for (std::size_t index = 0; index < size(); ++index) {
+            m_buffer.data()[index] = value;
+        }
+    }
+
+    /// Fills every element from `generator(index)`.
+    template <typename Generator>
+        requires std::invocable<Generator&, std::size_t>
+    void fill(Generator&& generator) {
+        for (std::size_t index = 0; index < size(); ++index) {
+            m_buffer.data()[index] = generator(index);
+        }
     }
 
   private:

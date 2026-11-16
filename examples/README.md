@@ -13,7 +13,9 @@ The binary is named after the source file, and the build mirrors this tree:
 |---|---|
 | `examples/matrix/basic.cpp` | `build/examples/matrix/basic` |
 | `examples/matrix/views.cpp` | `build/examples/matrix/views` |
+| `examples/matrix/random.cpp` | `build/examples/matrix/random` |
 | `examples/vector/basic.cpp` | `build/examples/vector/basic` |
+| `examples/io/basic.cpp` | `build/examples/io/basic` |
 | `examples/errors/handling.cpp` | `build/examples/errors/handling` |
 
 ```sh
@@ -28,6 +30,10 @@ cmake --build build --target matrix_basic
   and the row-major strides.
 - **`matrix/views`** — `block`, `row`, `col`, `transpose` and the implicit
   conversion to a `matrix_view`, all as windows that write back to the original.
+- **`matrix/random`** — reproducible `random(rows, cols, seed, bounds)`, `fill` with a value
+  and with a generator, and the same on a block.
+- **`io/basic`** — writing a matrix to disk, reading it back with an explicit scalar type, and
+  the error returned when the type does not match.
 - **`vector/basic`** — construction, indexing, iteration with plain pointers, and
   `as_column()` handing a vector to matrix-shaped code without copying.
 - **`errors/handling`** — what is thrown where, catching through the standard

@@ -24,6 +24,8 @@ function(lazuli_add_example name source)
 endfunction()
 
 lazuli_add_example(matrix_basic matrix/basic.cpp)
+lazuli_add_example(matrix_random matrix/random.cpp)
 lazuli_add_example(matrix_views matrix/views.cpp)
 lazuli_add_example(vector_basic vector/basic.cpp)
+lazuli_add_example(io_basic io/basic.cpp)
 lazuli_add_example(errors_handling errors/handling.cpp)

@@ -22,7 +22,10 @@ add_executable(
     lazuli_tests
     core/aligned.cpp
     core/error.cpp
+    io/io.cpp
+    matrix/fill.cpp
     matrix/matrix.cpp
+    matrix/random.cpp
     matrix/vector.cpp
     matrix/view.cpp)
 

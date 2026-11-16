@@ -5,12 +5,14 @@
 
 #include <algorithm>
 #include <complex>
+#include <concepts>
 #include <cstddef>
 #include <initializer_list>
 #include <type_traits>
 #include <utility>
 
 #include "lazuli/core/aligned.hpp"
+#include "lazuli/matrix/random.hpp"
 #include "lazuli/matrix/view.hpp"
 
 namespace lazuli::detail {
@@ -39,6 +41,21 @@ class matrix {
         result.m_rows = rows;
         result.m_cols = cols;
         result.m_buffer = aligned_buffer<T>{rows * cols};
+        return result;
+    }
+
+    /// Uniformly distributed values in `bounds`, reproducible from `seed`.
+    [[nodiscard]] static matrix random(std::size_t rows,
+                                       std::size_t cols,
+                                       std::uint64_t seed,
+                                       interval<T> bounds) {
+        matrix result = uninitialized(rows, cols);
+        splitmix64 generator{seed};
+        for (std::size_t row = 0; row < rows; ++row) {
+            for (std::size_t column = 0; column < cols; ++column) {
+                result(row, column) = uniform_between<T>(generator, bounds);
+            }
+        }
         return result;
     }
 
@@ -145,6 +162,16 @@ class matrix {
     [[nodiscard]] auto col(this auto&& self, std::size_t index) { return self.view().col(index); }
 
     [[nodiscard]] auto transpose(this auto&& self) noexcept { return self.view().transpose(); }
+
+    /// Writes `value` to every element.
+    void fill(const T& value) { view().fill(value); }
+
+    /// Fills every element from `generator(row, column)`.
+    template <typename Generator>
+        requires std::invocable<Generator&, std::size_t, std::size_t>
+    void fill(Generator&& generator) {
+        view().fill(std::forward<Generator>(generator));
+    }
 
   private:
     std::size_t m_rows = 0;

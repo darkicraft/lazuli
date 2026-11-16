@@ -3,6 +3,7 @@
 /// @file
 /// @brief Non-owning windows over strided, dense two-dimensional blocks.
 
+#include <concepts>
 #include <cstddef>
 #include <type_traits>
 
@@ -38,6 +39,16 @@ class matrix_view {
           m_cols(cols),
           m_row_stride(row_stride),
           m_col_stride(col_stride) {}
+
+    /// Widening conversion: a window of mutable elements is a window of const elements.
+    template <typename U>
+        requires(std::is_convertible_v<U*, T*> && !std::is_same_v<U, T>)
+    constexpr matrix_view(const matrix_view<U>& other) noexcept
+        : m_data(other.data()),
+          m_rows(other.rows()),
+          m_cols(other.cols()),
+          m_row_stride(other.row_stride()),
+          m_col_stride(other.col_stride()) {}
 
     [[nodiscard]] constexpr std::size_t rows() const noexcept { return m_rows; }
     [[nodiscard]] constexpr std::size_t cols() const noexcept { return m_cols; }
@@ -98,6 +109,28 @@ class matrix_view {
 
     [[nodiscard]] matrix_view transpose() const noexcept {
         return matrix_view{m_data, m_cols, m_rows, m_col_stride, m_row_stride};
+    }
+
+    /// Writes `value` to every element of the window.
+    void fill(const T& value)
+        requires(!std::is_const_v<T>)
+    {
+        for (std::size_t row = 0; row < m_rows; ++row) {
+            for (std::size_t column = 0; column < m_cols; ++column) {
+                (*this)(row, column) = value;
+            }
+        }
+    }
+
+    /// Fills every element of the window from `generator(row, column)`.
+    template <typename Generator>
+        requires(!std::is_const_v<T> && std::invocable<Generator&, std::size_t, std::size_t>)
+    void fill(Generator&& generator) {
+        for (std::size_t row = 0; row < m_rows; ++row) {
+            for (std::size_t column = 0; column < m_cols; ++column) {
+                (*this)(row, column) = generator(row, column);
+            }
+        }
     }
 
   private:

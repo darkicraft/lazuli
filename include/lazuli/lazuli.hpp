@@ -3,11 +3,11 @@
 /// @file
 /// @brief Umbrella header for the public Lazuli API.
 ///
-/// This is the only include a user needs. Every declaration below lives in
-/// `lazuli::detail`; this block is the public surface, and nothing outside it
-/// is supported.
+/// This is the only include a user needs. Every declaration below lives in `lazuli::detail`;
+/// this block is the public surface, and nothing outside it is supported.
 
 #include "lazuli/core/error.hpp"
+#include "lazuli/io/io.hpp"
 #include "lazuli/matrix/matrix.hpp"
 #include "lazuli/matrix/vector.hpp"
 #include "lazuli/matrix/view.hpp"
@@ -30,6 +30,9 @@ using detail::singular_matrix;
 /// An index fell outside its container.
 using detail::out_of_bounds;
 
+/// Half-open sampling bounds for `matrix<T>::random`.
+using detail::interval;
+
 /// Row-major, contiguous, owning dense matrix.
 using detail::matrix;
 
@@ -43,3 +46,14 @@ using detail::vector;
 using detail::to_string;
 
 }  // namespace lazuli
+
+/// Reading and writing matrices.
+namespace lazuli::io {
+
+/// Reads a matrix previously written by `save<T>`.
+using detail::io::load;
+
+/// Writes a matrix in the compact binary format.
+using detail::io::save;
+
+}  // namespace lazuli::io
