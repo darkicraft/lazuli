@@ -20,7 +20,7 @@ InsertBraces: true
 IndentCaseLabels: false
 
 # --- Wrapping and Packing ---
-BinPackParameters: false
+BinPackParameters: OnePerLine
 BinPackArguments: false
 BreakConstructorInitializers: BeforeColon
 PackConstructorInitializers: Never
@@ -32,6 +32,8 @@ AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLoopsOnASingleLine: true
 
 # --- Includes ---
-SortIncludes: true
+SortIncludes:
+  Enabled: true
+  IgnoreCase: false
 IncludeBlocks: Preserve
 ...

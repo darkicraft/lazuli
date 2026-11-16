@@ -1,0 +1,54 @@
+cmake_minimum_required(VERSION 3.30)
+
+project(
+    lazuli
+    VERSION 0.1.0
+    LANGUAGES CXX)
+
+# Keep the generated database where the clangd/Zed symlink expects it.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Modules are deliberately parked; keep the build free of the module scanner.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+option(LAZULI_BUILD_TESTS "Build the test suite" ON)
+option(LAZULI_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
+
+function(lazuli_set_warnings target)
+    target_compile_options(
+        ${target}
+        PRIVATE -Wall
+                -Wextra
+                -Wpedantic
+                -Wconversion
+                -Wsign-conversion
+                -Wshadow)
+    if(LAZULI_WARNINGS_AS_ERRORS)
+        target_compile_options(${target} PRIVATE -Werror)
+    endif()
+endfunction()
+
+add_library(
+    lazuli STATIC
+    src/core/error.cpp
+    src/matrix/matrix.cpp
+    src/matrix/vector.cpp)
+add_library(lazuli::lazuli ALIAS lazuli)
+
+target_compile_features(lazuli PUBLIC cxx_std_23)
+target_include_directories(
+    lazuli
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+           $<INSTALL_INTERFACE:include>)
+
+lazuli_set_warnings(lazuli)
+
+if(LAZULI_BUILD_TESTS)
+    enable_testing()
+
+    set(lazuli_guards ${CMAKE_CURRENT_SOURCE_DIR}/cmake/guards.cmake)
+    add_test(NAME guards COMMAND ${CMAKE_COMMAND} -P ${lazuli_guards})
+
+    add_subdirectory(tests)
+endif()
