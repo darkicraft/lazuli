@@ -12,3 +12,6 @@ compile_commands.json
 
 # python caches
 __pycache__/
+
+# fetched test framework
+.deps/
