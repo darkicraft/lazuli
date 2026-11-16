@@ -1,0 +1,14 @@
+references/
+docs/
+
+# build trees
+build/
+build-*/
+
+# editors / tooling
+.cache/
+.venv/
+compile_commands.json
+
+# python caches
+__pycache__/
