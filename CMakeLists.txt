@@ -13,6 +13,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(LAZULI_BUILD_TESTS "Build the test suite" ON)
+option(LAZULI_BUILD_EXAMPLES "Build the examples" ON)
 option(LAZULI_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 function(lazuli_set_warnings target)
@@ -51,4 +52,8 @@ if(LAZULI_BUILD_TESTS)
     add_test(NAME guards COMMAND ${CMAKE_COMMAND} -P ${lazuli_guards})
 
     add_subdirectory(tests)
+endif()
+
+if(LAZULI_BUILD_EXAMPLES)
+    add_subdirectory(examples)
 endif()
