@@ -35,7 +35,8 @@ add_library(
     lazuli STATIC
     src/core/allocation.cpp
     src/core/error.cpp
-    src/io/io.cpp)
+    src/io/io.cpp
+    src/kernel/matmul.cpp)
 add_library(lazuli::lazuli ALIAS lazuli)
 
 target_compile_features(lazuli PUBLIC cxx_std_23)

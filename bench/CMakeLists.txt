@@ -6,6 +6,15 @@ target_include_directories(lazuli_baseline PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 lazuli_set_warnings(lazuli_baseline)
 
 if(LAZULI_BUILD_BENCH)
+    add_executable(bench_kernel_timing kernel_timing.cpp)
+    target_link_libraries(bench_kernel_timing PRIVATE lazuli_baseline)
+    lazuli_set_warnings(bench_kernel_timing)
+    set_target_properties(
+        bench_kernel_timing
+        PROPERTIES OUTPUT_NAME kernel_timing
+                   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
+                   FOLDER "bench")
+
     add_executable(bench_time_matmul time_matmul.cpp)
     target_link_libraries(bench_time_matmul PRIVATE lazuli_baseline)
     lazuli_set_warnings(bench_time_matmul)

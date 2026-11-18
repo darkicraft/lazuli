@@ -1,7 +1,7 @@
 // Times the frozen baseline matrix multiplication.
 //
 //   cmake --build build --target bench_time_matmul
-//   ./build/bench/time_matmul a.lzm b.lzm --reps 5 --output c.lzm
+//   ./build/bench/time_matmul a.lzm b.lzm --reps 5 [--kernel] [--output c.lzm]
 //
 // Operands come from files on purpose: nothing on the timed path may be visible to the compiler
 // as a constant.
@@ -15,6 +15,7 @@
 #include <string_view>
 #include <vector>
 
+#include <lazuli/kernel/matmul.hpp>
 #include <lazuli/lazuli.hpp>
 
 #include "baseline/matmul.hpp"
@@ -22,7 +23,7 @@
 namespace {
 
 constexpr std::string_view usage =
-    "usage: time_matmul <a.lzm> <b.lzm> [--reps N] [--output C.lzm]\n";
+    "usage: time_matmul <a.lzm> <b.lzm> [--reps N] [--kernel] [--output C.lzm]\n";
 
 [[nodiscard]] bool parse_positive(std::string_view text, int& value) {
     try {
@@ -45,6 +46,7 @@ int main(int argc, char** argv) {
     std::string b_path;
     std::string output_path;
     int repetitions = 5;
+    bool use_kernel = false;
 
     for (int i = 1; i < argc; ++i) {
         const std::string_view argument{argv[i]};
@@ -53,6 +55,8 @@ int main(int argc, char** argv) {
                 std::fputs(usage.data(), stderr);
                 return 2;
             }
+        } else if (argument == "--kernel") {
+            use_kernel = true;
         } else if (argument == "--output" && i + 1 < argc) {
             output_path = argv[++i];
         } else if (a_path.empty()) {
@@ -101,7 +105,11 @@ int main(int argc, char** argv) {
     for (int run = 0; run <= repetitions; ++run) {
         out.fill(0.0);
         const auto start = std::chrono::steady_clock::now();
-        lazuli::bench::baseline::matmul(a, b, out);
+        if (use_kernel) {
+            lazuli::detail::kernel::matmul(a, b, out);
+        } else {
+            lazuli::bench::baseline::matmul(a, b, out);
+        }
         const auto stop = std::chrono::steady_clock::now();
         // The warm-up run is discarded: this laptop throttles, and a cold run is not the same
         // machine as a warm one.
@@ -124,7 +132,8 @@ int main(int argc, char** argv) {
                               static_cast<double>(b.cols());
     const double gflops = operations / median / 1e9;
 
-    std::printf("size=%zux%zux%zu reps=%d median_ms=%.3f gflops=%.3f checksum=%.9e\n",
+    std::printf("impl=%s size=%zux%zux%zu reps=%d median_ms=%.3f gflops=%.3f checksum=%.9e\n",
+                use_kernel ? "kernel" : "baseline",
                 a.rows(),
                 a.cols(),
                 b.cols(),

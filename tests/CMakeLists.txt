@@ -28,6 +28,7 @@ add_executable(
     expr/matmul.cpp
     expr/vector.cpp
     io/io.cpp
+    kernel/matmul.cpp
     matrix/fill.cpp
     matrix/matrix.cpp
     matrix/random.cpp

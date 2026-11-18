@@ -56,6 +56,11 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--reps", type=int, default=5)
     parser.add_argument("--bench", type=pathlib.Path, default=pathlib.Path("build/bench/time_matmul"))
+    parser.add_argument(
+        "--kernel",
+        action="store_true",
+        help="time the library kernel instead of the frozen baseline",
+    )
     parser.add_argument("--keep", action="store_true", help="keep the generated files")
     options = parser.parse_args()
 
@@ -73,9 +78,12 @@ def main() -> int:
     write_matrix(a_path, a)
     write_matrix(b_path, b)
 
+    command = [str(options.bench), str(a_path), str(b_path), "--reps", str(options.reps),
+               "--output", str(c_path)]
+    if options.kernel:
+        command.append("--kernel")
     result = subprocess.run(
-        [str(options.bench), str(a_path), str(b_path), "--reps", str(options.reps),
-         "--output", str(c_path)],
+        command,
         check=False, capture_output=True, text=True,
     )
     if result.returncode != 0:

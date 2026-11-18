@@ -236,7 +236,7 @@ class product {
     }
 
     void assign_to(matrix_view<value_type> out) const {
-        kernel::matmul<value_type>(m_left, m_right, out);
+        kernel::matmul(left_view(), right_view(), out);
     }
 
     template <typename F>
@@ -254,9 +254,33 @@ class product {
         }
     }
 
+    /// The kernel wants views, so an operand that is itself an expression is materialised once.
+    template <typename Side>
+    [[nodiscard]] matrix_view<const value_type> materialise_operand(
+        const Side& side, std::optional<matrix<value_type>>& cache) const {
+        if constexpr (requires { typename Side::view_tag; }) {
+            return side;
+        } else {
+            if (!cache) {
+                cache.emplace(evaluate(side));
+            }
+            return cache->view();
+        }
+    }
+
+    [[nodiscard]] matrix_view<const value_type> left_view() const {
+        return materialise_operand(m_left, m_left_cache);
+    }
+
+    [[nodiscard]] matrix_view<const value_type> right_view() const {
+        return materialise_operand(m_right, m_right_cache);
+    }
+
     L m_left;
     R m_right;
     mutable std::optional<matrix<value_type>> m_cache;
+    mutable std::optional<matrix<value_type>> m_left_cache;
+    mutable std::optional<matrix<value_type>> m_right_cache;
 };
 
 template <typename L, typename R>
