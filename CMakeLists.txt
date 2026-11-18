@@ -33,6 +33,7 @@ endfunction()
 
 add_library(
     lazuli STATIC
+    src/core/allocation.cpp
     src/core/error.cpp
     src/io/io.cpp)
 add_library(lazuli::lazuli ALIAS lazuli)

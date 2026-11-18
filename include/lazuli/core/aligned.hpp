@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <utility>
 
+#include "lazuli/core/allocation.hpp"
 #include "lazuli/core/error.hpp"
 
 namespace lazuli::detail {
@@ -21,6 +22,7 @@ inline constexpr std::size_t default_alignment = 64;
     if (pointer == nullptr) {
         fail_bad_alloc();
     }
+    note_allocation();
     return pointer;
 }
 

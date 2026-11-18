@@ -27,6 +27,7 @@ class matrix_view {
   public:
     using element_type = T;
     using value_type = std::remove_const_t<T>;
+    using view_tag = void;
 
     constexpr matrix_view() noexcept = default;
 
@@ -110,6 +111,12 @@ class matrix_view {
 
     [[nodiscard]] matrix_view transpose() const noexcept {
         return matrix_view{m_data, m_cols, m_rows, m_col_stride, m_row_stride};
+    }
+
+    /// Visits this view as a leaf of an expression.
+    template <typename F>
+    void visit_leaves(F&& visit) const {
+        visit(*this);
     }
 
     /// Writes `value` to every element of the window.

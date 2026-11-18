@@ -16,6 +16,7 @@ The binary is named after the source file, and the build mirrors this tree:
 | `examples/matrix/random.cpp` | `build/examples/matrix/random` |
 | `examples/vector/basic.cpp` | `build/examples/vector/basic` |
 | `examples/io/basic.cpp` | `build/examples/io/basic` |
+| `examples/expr/basic.cpp` | `build/examples/expr/basic` |
 | `examples/errors/handling.cpp` | `build/examples/errors/handling` |
 
 ```sh
@@ -34,6 +35,9 @@ cmake --build build --target matrix_basic
   and with a generator, and the same on a block.
 - **`io/basic`** — writing a matrix to disk, reading it back with an explicit scalar type, and
   the error returned when the type does not match.
+- **`expr/basic`** — lazy expressions: a fused elementwise chain, a product that writes straight
+  into the destination, a product inside a larger expression, `noalias()`, `eval()`, a transposed
+  operand, and a matrix-vector product.
 - **`vector/basic`** — construction, indexing, iteration with plain pointers, and
   `as_column()` handing a vector to matrix-shaped code without copying.
 - **`errors/handling`** — what is thrown where, catching through the standard

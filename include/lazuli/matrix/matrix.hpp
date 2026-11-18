@@ -12,6 +12,7 @@
 
 #include "lazuli/core/aligned.hpp"
 #include "lazuli/core/scalar.hpp"
+#include "lazuli/matrix/like.hpp"
 #include "lazuli/matrix/random.hpp"
 #include "lazuli/matrix/view.hpp"
 
@@ -163,6 +164,42 @@ class matrix {
 
     [[nodiscard]] auto transpose(this auto&& self) noexcept { return self.view().transpose(); }
 
+    /// Whether this matrix shares storage with `grid`.
+    template <typename E>
+        requires(matrix_like<std::decay_t<E>> && !std::is_same_v<std::decay_t<E>, matrix>)
+    matrix(E&& expression) {
+        assign_expression(std::forward<E>(expression), true);
+    }
+
+    /// Evaluates an expression into this matrix, resizing when it is empty.
+    template <typename E>
+        requires(matrix_like<std::decay_t<E>> && !std::is_same_v<std::decay_t<E>, matrix>)
+    matrix& operator=(E&& expression) {
+        assign_expression(std::forward<E>(expression), true);
+        return *this;
+    }
+
+    /// Assignment that skips the overlap check. Only use it when the destination cannot alias
+    /// any operand.
+    struct noalias_proxy {
+        matrix& target;
+
+        template <typename E>
+            requires matrix_like<std::decay_t<E>>
+        matrix& operator=(E&& expression) {
+            target.assign_expression(std::forward<E>(expression), false);
+            return target;
+        }
+    };
+
+    [[nodiscard]] noalias_proxy noalias() noexcept { return noalias_proxy{*this}; }
+
+    /// Visits this matrix as a leaf of an expression.
+    template <typename F>
+    void visit_leaves(F&& visit) const {
+        visit(view());
+    }
+
     /// Writes `value` to every element.
     void fill(const T& value) { view().fill(value); }
 
@@ -174,6 +211,40 @@ class matrix {
     }
 
   private:
+    template <typename E>
+    void assign_expression(E&& expression, bool check_alias) {
+        auto node = to_node(std::forward<E>(expression));
+        using node_type = decltype(node);
+        static_assert(std::is_same_v<typename node_type::value_type, T>);
+
+        if (m_rows == 0 && m_cols == 0) {
+            m_rows = node.rows();
+            m_cols = node.cols();
+            m_buffer = aligned_buffer<T>{m_rows * m_cols};
+        } else if (m_rows != node.rows() || m_cols != node.cols()) {
+            fail_dimension_mismatch("assignment shape disagrees");
+        }
+
+        if (check_alias && has_alias(node)) {
+            matrix temporary(node.rows(), node.cols());
+            assign_into(node, temporary.view());
+            swap(temporary);
+            return;
+        }
+        assign_into(node, view());
+    }
+
+    template <typename Node>
+    [[nodiscard]] bool has_alias(const Node& node) const {
+        bool found = false;
+        node.visit_leaves([&](const auto& leaf) {
+            if (!found && overlaps(view(), leaf)) {
+                found = true;
+            }
+        });
+        return found;
+    }
+
     std::size_t m_rows = 0;
     std::size_t m_cols = 0;
     aligned_buffer<T> m_buffer;

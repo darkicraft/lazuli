@@ -12,6 +12,7 @@
 
 #include "lazuli/core/aligned.hpp"
 #include "lazuli/core/scalar.hpp"
+#include "lazuli/matrix/like.hpp"
 #include "lazuli/matrix/view.hpp"
 
 namespace lazuli::detail {
@@ -21,6 +22,7 @@ class vector {
   public:
     using value_type = T;
     using element_type = T;
+    using column_tag = void;
 
     constexpr vector() noexcept = default;
 
@@ -95,6 +97,38 @@ class vector {
             self.data(), self.size(), std::size_t{1}, std::size_t{1}, self.size()};
     }
 
+    /// A vector reads as an n-by-1 grid inside expressions.
+    [[nodiscard]] std::size_t rows() const noexcept { return size(); }
+    [[nodiscard]] std::size_t cols() const noexcept { return 1; }
+
+    [[nodiscard]] T& operator()(std::size_t row, std::size_t /*column*/) noexcept {
+        return m_buffer.data()[row];
+    }
+
+    [[nodiscard]] const T& operator()(std::size_t row, std::size_t /*column*/) const noexcept {
+        return m_buffer.data()[row];
+    }
+
+    /// Evaluates a single-column expression into this vector, resizing when it is empty.
+    template <typename E>
+        requires(matrix_like<std::decay_t<E>> && !std::is_same_v<std::decay_t<E>, vector>)
+    vector(E&& expression) {
+        assign_expression(std::forward<E>(expression));
+    }
+
+    template <typename E>
+        requires(matrix_like<std::decay_t<E>> && !std::is_same_v<std::decay_t<E>, vector>)
+    vector& operator=(E&& expression) {
+        assign_expression(std::forward<E>(expression));
+        return *this;
+    }
+
+    /// Visits this vector as a leaf of an expression, seen as a column.
+    template <typename F>
+    void visit_leaves(F&& visit) const {
+        visit(as_column());
+    }
+
     /// Writes `value` to every element.
     void fill(const T& value) {
         for (std::size_t index = 0; index < size(); ++index) {
@@ -112,6 +146,36 @@ class vector {
     }
 
   private:
+    template <typename E>
+    void assign_expression(E&& expression) {
+        auto node = to_node(std::forward<E>(expression));
+        using node_type = decltype(node);
+        static_assert(std::is_same_v<typename node_type::value_type, T>);
+        if (node.cols() != 1) {
+            fail_dimension_mismatch("a vector needs a single-column result");
+        }
+
+        if (empty()) {
+            m_buffer = aligned_buffer<T>{node.rows()};
+        } else if (size() != node.rows()) {
+            fail_dimension_mismatch("assignment shape disagrees");
+        }
+
+        bool aliased = false;
+        node.visit_leaves([&](const auto& leaf) {
+            if (!aliased && overlaps(as_column(), leaf)) {
+                aliased = true;
+            }
+        });
+        if (aliased) {
+            vector temporary(node.rows());
+            assign_into(node, temporary.as_column());
+            swap(temporary);
+            return;
+        }
+        assign_into(node, as_column());
+    }
+
     aligned_buffer<T> m_buffer;
 };
 

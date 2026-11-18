@@ -23,6 +23,10 @@ add_executable(
     bench/baseline.cpp
     core/aligned.cpp
     core/error.cpp
+    expr/alias.cpp
+    expr/elementwise.cpp
+    expr/matmul.cpp
+    expr/vector.cpp
     io/io.cpp
     matrix/fill.cpp
     matrix/matrix.cpp
