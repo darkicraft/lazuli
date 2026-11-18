@@ -6,7 +6,11 @@
 #include <string>
 #include <string_view>
 
+#include <cstddef>
+#include <ios>
 #include <lazuli/lazuli.hpp>
+#include <system_error>
+#include <utility>
 
 namespace {
 

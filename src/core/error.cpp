@@ -3,6 +3,7 @@
 #include <new>
 #include <string>
 
+#include <string_view>
 #include "lazuli/core/error.hpp"
 
 namespace lazuli::detail {

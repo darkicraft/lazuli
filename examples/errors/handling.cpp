@@ -6,6 +6,7 @@
 #include <lazuli/lazuli.hpp>
 
 #include <cstdio>
+#include <exception>
 #include <stdexcept>
 
 namespace {

@@ -4,6 +4,7 @@
 
 #include <lazuli/core/aligned.hpp>
 
+#include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 namespace {

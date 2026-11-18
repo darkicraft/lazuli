@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <system_error>
 
 int main() {
     const std::filesystem::path path =

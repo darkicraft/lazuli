@@ -2,6 +2,7 @@
 
 #include <complex>
 
+#include <lazuli/core/scalar.hpp>
 #include <lazuli/lazuli.hpp>
 
 // Supported element types exist.
