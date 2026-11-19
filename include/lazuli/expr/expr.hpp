@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "lazuli/core/options.hpp"
 #include "lazuli/core/scalar.hpp"
 #include "lazuli/kernel/matmul.hpp"
 #include "lazuli/matrix/like.hpp"
@@ -22,9 +23,9 @@ namespace lazuli::detail {
 
 /// Evaluates a node into a fresh matrix.
 template <typename Node>
-[[nodiscard]] matrix<typename Node::value_type> evaluate(const Node& node) {
+[[nodiscard]] matrix<typename Node::value_type> evaluate(const Node& node, options settings = {}) {
     matrix<typename Node::value_type> result(node.rows(), node.cols());
-    node.assign_to(result.view());
+    node.assign_to(result.view(), settings);
     return result;
 }
 
@@ -61,7 +62,8 @@ class add {
         return at(row, column);
     }
 
-    void assign_to(matrix_view<value_type> out) const {
+    void assign_to(matrix_view<value_type> out, options settings = {}) const {
+        configure(settings);
         for (std::size_t row = 0; row < out.rows(); ++row) {
             for (std::size_t column = 0; column < out.cols(); ++column) {
                 out(row, column) = at(row, column);
@@ -75,7 +77,12 @@ class add {
         m_right.visit_leaves(visit);
     }
 
-    [[nodiscard]] auto eval() const { return evaluate(*this); }
+    [[nodiscard]] auto eval(options settings = {}) const { return evaluate(*this, settings); }
+
+    void configure(options settings) const {
+        m_left.configure(settings);
+        m_right.configure(settings);
+    }
 
   private:
     L m_left;
@@ -107,7 +114,8 @@ class sub {
         return at(row, column);
     }
 
-    void assign_to(matrix_view<value_type> out) const {
+    void assign_to(matrix_view<value_type> out, options settings = {}) const {
+        configure(settings);
         for (std::size_t row = 0; row < out.rows(); ++row) {
             for (std::size_t column = 0; column < out.cols(); ++column) {
                 out(row, column) = at(row, column);
@@ -121,7 +129,12 @@ class sub {
         m_right.visit_leaves(visit);
     }
 
-    [[nodiscard]] auto eval() const { return evaluate(*this); }
+    [[nodiscard]] auto eval(options settings = {}) const { return evaluate(*this, settings); }
+
+    void configure(options settings) const {
+        m_left.configure(settings);
+        m_right.configure(settings);
+    }
 
   private:
     L m_left;
@@ -148,7 +161,8 @@ class negate {
         return at(row, column);
     }
 
-    void assign_to(matrix_view<value_type> out) const {
+    void assign_to(matrix_view<value_type> out, options settings = {}) const {
+        configure(settings);
         for (std::size_t row = 0; row < out.rows(); ++row) {
             for (std::size_t column = 0; column < out.cols(); ++column) {
                 out(row, column) = at(row, column);
@@ -161,7 +175,9 @@ class negate {
         m_operand.visit_leaves(visit);
     }
 
-    [[nodiscard]] auto eval() const { return evaluate(*this); }
+    [[nodiscard]] auto eval(options settings = {}) const { return evaluate(*this, settings); }
+
+    void configure(options settings) const { m_operand.configure(settings); }
 
   private:
     L m_operand;
@@ -188,7 +204,8 @@ class scale {
         return at(row, column);
     }
 
-    void assign_to(matrix_view<value_type> out) const {
+    void assign_to(matrix_view<value_type> out, options settings = {}) const {
+        configure(settings);
         for (std::size_t row = 0; row < out.rows(); ++row) {
             for (std::size_t column = 0; column < out.cols(); ++column) {
                 out(row, column) = at(row, column);
@@ -201,7 +218,9 @@ class scale {
         m_operand.visit_leaves(visit);
     }
 
-    [[nodiscard]] auto eval() const { return evaluate(*this); }
+    [[nodiscard]] auto eval(options settings = {}) const { return evaluate(*this, settings); }
+
+    void configure(options settings) const { m_operand.configure(settings); }
 
   private:
     value_type m_factor;
@@ -235,8 +254,15 @@ class product {
         return at(row, column);
     }
 
-    void assign_to(matrix_view<value_type> out) const {
-        kernel::matmul(left_view(), right_view(), out);
+    void assign_to(matrix_view<value_type> out, options settings = {}) const {
+        configure(settings);
+        kernel::matmul(left_view(), right_view(), out, settings);
+    }
+
+    void configure(options settings) const {
+        m_settings = settings;
+        m_left.configure(settings);
+        m_right.configure(settings);
     }
 
     template <typename F>
@@ -245,12 +271,12 @@ class product {
         m_right.visit_leaves(visit);
     }
 
-    [[nodiscard]] auto eval() const { return evaluate(*this); }
+    [[nodiscard]] auto eval(options settings = {}) const { return evaluate(*this, settings); }
 
   private:
     void materialise() const {
         if (!m_cache) {
-            m_cache.emplace(evaluate(*this));
+            m_cache.emplace(evaluate(*this, m_settings));
         }
     }
 
@@ -281,6 +307,7 @@ class product {
     mutable std::optional<matrix<value_type>> m_cache;
     mutable std::optional<matrix<value_type>> m_left_cache;
     mutable std::optional<matrix<value_type>> m_right_cache;
+    mutable options m_settings{};
 };
 
 template <typename L, typename R>

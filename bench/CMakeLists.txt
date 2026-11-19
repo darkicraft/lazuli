@@ -15,6 +15,15 @@ if(LAZULI_BUILD_BENCH)
                    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
                    FOLDER "bench")
 
+    add_executable(bench_thread_sweep thread_sweep.cpp)
+    target_link_libraries(bench_thread_sweep PRIVATE lazuli::lazuli)
+    lazuli_set_warnings(bench_thread_sweep)
+    set_target_properties(
+        bench_thread_sweep
+        PROPERTIES OUTPUT_NAME thread_sweep
+                   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
+                   FOLDER "bench")
+
     add_executable(bench_time_matmul time_matmul.cpp)
     target_link_libraries(bench_time_matmul PRIVATE lazuli_baseline)
     lazuli_set_warnings(bench_time_matmul)

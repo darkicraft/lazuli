@@ -7,6 +7,7 @@
 /// this block is the public surface, and nothing outside it is supported.
 
 #include "lazuli/core/error.hpp"
+#include "lazuli/core/options.hpp"
 #include "lazuli/expr/expr.hpp"
 #include "lazuli/io/io.hpp"
 #include "lazuli/matrix/matrix.hpp"
@@ -30,6 +31,9 @@ using detail::singular_matrix;
 
 /// An index fell outside its container.
 using detail::out_of_bounds;
+
+/// Per-call settings, such as the worker thread count.
+using detail::options;
 
 /// Half-open sampling bounds for `matrix<T>::random`.
 using detail::interval;

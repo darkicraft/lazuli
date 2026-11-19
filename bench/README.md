@@ -122,4 +122,35 @@ still runs on any x86-64 CPU because the AVX2 path is chosen at run time — unl
 With no hardware counters available on this machine, the evidence for the blocking is these
 timings rather than cache-miss data.
 
-There is no OpenMP yet: threading lands in M4, on top of this kernel.
+## M4 — OpenMP over the output tiles
+
+The kernel parallelises over row blocks of C: each worker packs its own A panel and writes its
+own rows, so there is no shared write and no lock. The B panel is packed once and read by every
+worker. The thread count is a per-call setting, never a change to the process-wide OpenMP state:
+
+```cpp
+lazuli::matrix<double> c = (a * b).eval(lazuli::options{4});   // 4 workers
+lazuli::matrix<double> d = a * b;                              // runtime default
+```
+
+Outputs below `64^3` multiplications run serially, because fork/join costs more than it saves
+there.
+
+```sh
+cmake --build build/release --target bench_thread_sweep
+./build/release/bench/thread_sweep
+```
+
+| n | 1 | 2 | 3 | 4 | 6 | 8 | 12 |
+|---|---|---|---|---|---|---|---|
+| 256 GFLOPS | 14.70 | 20.87 | 30.70 | 37.16 | 30.63 | 31.61 | 22.43 |
+| 512 GFLOPS | 16.85 | 25.53 | 40.44 | 41.71 | 61.07 | 52.24 | 47.80 |
+| 1024 GFLOPS | 30.68 | 50.49 | 68.92 | 72.22 | **80.64** | 79.93 | 65.42 |
+
+Speedup at 1024 against one thread: 2.63x at six threads, then it *falls* — 12 hardware threads
+on a 6-core part oversubscribes, and the all-core clock is well below the single-core boost. The
+same shape, earlier, at 512: 3.62x at six threads.
+
+Against the frozen baseline (3.9 GFLOPS at 1024, single threaded) the threaded kernel is about
+20x. That comparison is the one the project reports; the single-thread figures above are there to
+show where the threading gains stop.

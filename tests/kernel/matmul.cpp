@@ -167,3 +167,24 @@ TEST_CASE("kernel: float matches the scalar loop") {
         REQUIRE(largest_difference(actual, expected) <= tolerance);
     }
 }
+
+TEST_CASE("kernel: the worker count does not change the result") {
+    const auto a = lazuli::matrix<double>::random(200, 300, 31, {-1.0, 1.0});
+    const auto b = lazuli::matrix<double>::random(300, 150, 32, {-1.0, 1.0});
+    const auto expected = reference(a, b);
+
+    for (std::size_t threads : {std::size_t{1}, std::size_t{2}, std::size_t{4}}) {
+        lazuli::matrix<double> actual(200, 150);
+        lazuli::detail::kernel::matmul(a, b, actual, lazuli::options{threads});
+        REQUIRE(largest_difference(actual, expected) <= 1e-12 * 300.0);
+    }
+}
+
+TEST_CASE("expr: eval accepts thread settings") {
+    const auto a = lazuli::matrix<double>::random(150, 150, 41, {-1.0, 1.0});
+    const auto b = lazuli::matrix<double>::random(150, 150, 42, {-1.0, 1.0});
+
+    const auto single = (a * b).eval(lazuli::options{1});
+    const auto parallel = (a * b).eval(lazuli::options{4});
+    REQUIRE(largest_difference(single, parallel) <= 1e-12 * 150.0);
+}

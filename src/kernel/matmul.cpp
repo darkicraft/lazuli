@@ -1,10 +1,15 @@
 #include "lazuli/kernel/matmul.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <vector>
 
-#if defined(__x86_64__) || defined(_M_X64)
+#if defined(__x86_64__)
 #include <immintrin.h>
+#endif
+
+#if defined(_OPENMP)
+#include <omp.h>
 #endif
 
 namespace lazuli::detail::kernel {
@@ -16,9 +21,12 @@ constexpr std::size_t block_m = 96;
 constexpr std::size_t block_n = 256;
 constexpr std::size_t block_k = 128;
 
-// The register tile: 12 rows of accumulators. Twelve leaves room for the broadcast operand and
-// the vector of B on a 16-register machine; sixteen would spill.
+// The register tile: 12 rows of accumulators, which leaves room for the broadcast operand and
+// the vector of B on a 16-register machine.
 constexpr std::size_t tile_rows = 12;
+
+// Below this much arithmetic the fork/join costs more than it saves.
+constexpr std::size_t parallel_threshold = 64 * 64 * 64;
 
 /// Straightforward i-k-j product. Used for non-x86 targets, pre-AVX2 CPUs and destinations whose
 /// columns are not contiguous, where the vector stores cannot be used.
@@ -35,7 +43,7 @@ void scalar_matmul(matrix_view<const T> a, matrix_view<const T> b, matrix_view<T
     }
 }
 
-#if defined(__x86_64__) || defined(_M_X64)
+#if defined(__x86_64__)
 
 [[nodiscard]] bool has_avx2() noexcept {
     static const bool supported = __builtin_cpu_supports("avx2") != 0;
@@ -147,21 +155,34 @@ void scalar_tile(const T* ap,
 template <typename T>
 __attribute__((target("avx2,fma"))) void avx2_matmul(matrix_view<const T> a,
                                                      matrix_view<const T> b,
-                                                     matrix_view<T> out) {
+                                                     matrix_view<T> out,
+                                                     options settings) {
     constexpr std::size_t tile_cols = simd<T>::width;
     const std::size_t m = a.rows();
     const std::size_t k = a.cols();
     const std::size_t n = b.cols();
 
-    std::vector<T> packed_a(block_m * block_k);
     std::vector<T> packed_b((block_n + tile_cols) * block_k);
     out.fill(T{});
+
+    // Never touch the process-wide OpenMP defaults; ask for a thread count per call instead.
+    // At most one worker per row block: asking for twelve workers to spread two blocks of work
+    // is fork/join plus spin-wait for no gain, and measurably slower than one thread.
+    const auto row_blocks = static_cast<int>((m + block_m - 1) / block_m);
+    int workers = 1;
+#if defined(_OPENMP)
+    workers =
+        settings.num_threads == 0 ? omp_get_max_threads() : static_cast<int>(settings.num_threads);
+    workers = std::min(workers, row_blocks);
+#endif
+    const bool parallel = workers > 1 && m * k * n >= parallel_threshold;
 
     for (std::size_t jc = 0; jc < n; jc += block_n) {
         const std::size_t nc = (n - jc < block_n) ? n - jc : block_n;
         for (std::size_t pc = 0; pc < k; pc += block_k) {
             const std::size_t kc = (k - pc < block_k) ? k - pc : block_k;
 
+            // The B panel is packed once and shared read-only by every worker.
             for (std::size_t j0 = 0; j0 < nc; j0 += tile_cols) {
                 const std::size_t cols = (nc - j0 < tile_cols) ? nc - j0 : tile_cols;
                 T* panel = packed_b.data() + (j0 / tile_cols) * kc * tile_cols;
@@ -174,8 +195,11 @@ __attribute__((target("avx2,fma"))) void avx2_matmul(matrix_view<const T> a,
                 }
             }
 
+            // Row blocks of the output are independent, so they are the unit of work.
+#pragma omp parallel for schedule(dynamic) if (parallel) num_threads(workers)
             for (std::size_t ic = 0; ic < m; ic += block_m) {
                 const std::size_t mc = (m - ic < block_m) ? m - ic : block_m;
+                std::vector<T> packed_a(block_m * block_k);
 
                 for (std::size_t i0 = 0; i0 < mc; i0 += tile_rows) {
                     const std::size_t rows = (mc - i0 < tile_rows) ? mc - i0 : tile_rows;
@@ -243,21 +267,27 @@ __attribute__((target("avx2,fma"))) void avx2_matmul(matrix_view<const T> a,
 
 }  // namespace
 
-void matmul(matrix_view<const float> a, matrix_view<const float> b, matrix_view<float> out) {
-#if defined(__x86_64__) || defined(_M_X64)
+void matmul(matrix_view<const float> a,
+            matrix_view<const float> b,
+            matrix_view<float> out,
+            options settings) {
+#if defined(__x86_64__)
     if (has_avx2() && out.col_stride() == 1) {
-        avx2_matmul<float>(a, b, out);
+        avx2_matmul<float>(a, b, out, settings);
         return;
     }
 #endif
     scalar_matmul(a, b, out);
 }
 
-void matmul(matrix_view<const double> a, matrix_view<const double> b, matrix_view<double> out) {
-#if defined(__x86_64__) || defined(_M_X64)
+void matmul(matrix_view<const double> a,
+            matrix_view<const double> b,
+            matrix_view<double> out,
+            options settings) {
+#if defined(__x86_64__)
     // The vector stores need contiguous columns in the destination.
     if (has_avx2() && out.col_stride() == 1) {
-        avx2_matmul<double>(a, b, out);
+        avx2_matmul<double>(a, b, out, settings);
         return;
     }
 #endif

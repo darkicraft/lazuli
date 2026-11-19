@@ -12,6 +12,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdio>
+#include <optional>
 
 #include <lazuli/kernel/matmul.hpp>
 #include <lazuli/lazuli.hpp>
@@ -27,13 +28,13 @@ double time_call(const lazuli::matrix<T>& a,
                  const lazuli::matrix<T>& b,
                  lazuli::matrix<T>& out,
                  int repetitions,
-                 bool kernel) {
+                 std::optional<std::size_t> threads) {
     double best = 1e9;
     for (int run = 0; run <= repetitions; ++run) {
         out.fill(T{});
         const auto start = clock_type::now();
-        if (kernel) {
-            lazuli::detail::kernel::matmul(a, b, out);
+        if (threads) {
+            lazuli::detail::kernel::matmul(a, b, out, lazuli::options{*threads});
         } else if constexpr (std::is_same_v<T, double>) {
             lazuli::bench::baseline::matmul(a, b, out);
         } else {
@@ -67,13 +68,17 @@ void report(const char* label) {
 
         const double flops =
             2.0 * static_cast<double>(n) * static_cast<double>(n) * static_cast<double>(n);
-        const double scalar_seconds = time_call(a, b, out, 3, false);
-        const double kernel_seconds = time_call(a, b, out, 5, true);
-        std::printf("  n=%-5zu baseline=%6.2f gflops  kernel=%6.2f gflops  speedup=%.1fx\n",
-                    n,
-                    flops / scalar_seconds / 1e9,
-                    flops / kernel_seconds / 1e9,
-                    scalar_seconds / kernel_seconds);
+        const double scalar_seconds = time_call(a, b, out, 3, std::nullopt);
+        const double one_thread = time_call(a, b, out, 5, std::size_t{1});
+        const double all_threads = time_call(a, b, out, 5, std::size_t{0});
+        std::printf(
+            "  n=%-5zu baseline=%6.2f  kernel/1t=%6.2f (%.1fx)  kernel/all=%6.2f (%.1fx)\n",
+            n,
+            flops / scalar_seconds / 1e9,
+            flops / one_thread / 1e9,
+            scalar_seconds / one_thread,
+            flops / all_threads / 1e9,
+            scalar_seconds / all_threads);
     }
 }
 

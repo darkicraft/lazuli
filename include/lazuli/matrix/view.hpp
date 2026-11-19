@@ -8,6 +8,7 @@
 #include <type_traits>
 
 #include "lazuli/core/error.hpp"
+#include "lazuli/core/options.hpp"
 #include "lazuli/core/scalar.hpp"
 
 namespace lazuli::detail {
@@ -112,6 +113,9 @@ class matrix_view {
     [[nodiscard]] matrix_view transpose() const noexcept {
         return matrix_view{m_data, m_cols, m_rows, m_col_stride, m_row_stride};
     }
+
+    /// Leaves have no per-call settings of their own.
+    void configure(options /*settings*/) const noexcept {}
 
     /// Visits this view as a leaf of an expression.
     template <typename F>
