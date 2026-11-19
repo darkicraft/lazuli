@@ -15,3 +15,6 @@ __pycache__/
 
 # fetched test framework
 .deps/
+
+# local benchmark runs
+*_result.md
