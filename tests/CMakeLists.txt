@@ -32,6 +32,7 @@ add_executable(
     io/io.cpp
     kernel/matmul.cpp
     matrix/fill.cpp
+    matrix/helpers.cpp
     matrix/matrix.cpp
     matrix/random.cpp
     matrix/scalar.cpp

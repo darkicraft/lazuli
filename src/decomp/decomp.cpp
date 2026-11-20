@@ -47,6 +47,40 @@ std::expected<matrix<double>, error> cholesky(const matrix<double>& a, options s
     return impl::cholesky_impl<double>(a, settings);
 }
 
+std::expected<std::vector<std::size_t>, error> lu_in_place(matrix_view<float> work,
+                                                           options settings) {
+    if (work.rows() != work.cols()) {
+        return std::unexpected{
+            impl::make_error(error_code::not_square, "LU needs a square matrix")};
+    }
+    std::vector<std::size_t> pivots(work.rows());
+    for (std::size_t index = 0; index < work.rows(); ++index) {
+        pivots[index] = index;
+    }
+    const auto swaps = impl::lu_factor<float>(work, pivots, settings);
+    if (!swaps) {
+        return std::unexpected{swaps.error()};
+    }
+    return pivots;
+}
+
+std::expected<std::vector<std::size_t>, error> lu_in_place(matrix_view<double> work,
+                                                           options settings) {
+    if (work.rows() != work.cols()) {
+        return std::unexpected{
+            impl::make_error(error_code::not_square, "LU needs a square matrix")};
+    }
+    std::vector<std::size_t> pivots(work.rows());
+    for (std::size_t index = 0; index < work.rows(); ++index) {
+        pivots[index] = index;
+    }
+    const auto swaps = impl::lu_factor<double>(work, pivots, settings);
+    if (!swaps) {
+        return std::unexpected{swaps.error()};
+    }
+    return pivots;
+}
+
 std::expected<qr_result<float>, error> qr(const matrix<float>& a, options settings) {
     return impl::qr_impl<float>(a, settings);
 }

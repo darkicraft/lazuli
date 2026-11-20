@@ -6,6 +6,7 @@
 #include <lazuli/core/error.hpp>
 #include <lazuli/core/options.hpp>
 #include <lazuli/core/scalar.hpp>
+#include <lazuli/matrix/grid.hpp>
 
 #include <concepts>
 #include <cstddef>
@@ -112,6 +113,15 @@ class matrix_view {
 
     [[nodiscard]] matrix_view transpose() const noexcept {
         return matrix_view{m_data, m_cols, m_rows, m_col_stride, m_row_stride};
+    }
+
+    /// Frobenius norm.
+    [[nodiscard]] value_type norm() const { return frobenius_norm(*this); }
+
+    /// Element-wise comparison within a tolerance.
+    template <matrix_like Other>
+    [[nodiscard]] bool approx_equal(const Other& other, value_type tolerance) const {
+        return lazuli::detail::approx_equal(*this, other, tolerance);
     }
 
     /// Leaves have no per-call settings of their own.

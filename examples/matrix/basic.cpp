@@ -6,6 +6,8 @@
 #include <lazuli/lazuli.hpp>
 
 #include <cstdio>
+#include <format>
+#include <string>
 
 namespace {
 
@@ -49,6 +51,18 @@ int main() {
         }
     }
     print("scratch", scratch);
+
+    // Factories and comparisons.
+    const auto identity = lazuli::matrix<double>::identity(3);
+    print("identity(3)", identity);
+    std::printf("norm of identity(3): %.4f\n", identity.norm());
+    std::printf("values approx_equal itself: %s\n",
+                values.approx_equal(values, 0.0) ? "yes" : "no");
+    std::printf("identity approx_equal values: %s\n",
+                identity.approx_equal(values, 0.0) ? "yes" : "no");
+
+    // std::format works without a stream manipulator in sight.
+    std::printf("formatted: %s\n", std::format("{}", values).c_str());
 
     // Storage is row-major and contiguous, so the strides are plain numbers.
     std::printf("row stride %zu, column stride %zu, %zu elements\n",

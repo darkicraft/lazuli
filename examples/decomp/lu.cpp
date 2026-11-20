@@ -47,5 +47,17 @@ int main() {
     }
     print("inverse", *inverse);
 
+    // The allocation-free path: factor a copy in place and keep the permutation.
+    lazuli::matrix<double> working = a;
+    const auto pivots = lazuli::lu_in_place(working.view());
+    if (!pivots) {
+        std::printf("lu_in_place failed: %s\n", pivots.error().message.c_str());
+        return 1;
+    }
+    std::printf("in place: U[0,0] = %.4f, permutation %zu %zu\n",
+                working(0, 0),
+                (*pivots)[0],
+                (*pivots)[1]);
+
     return 0;
 }

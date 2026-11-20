@@ -47,6 +47,13 @@ std::expected<matrix<double>, error> inverse(const matrix<double>& a, options se
 std::expected<matrix<float>, error> cholesky(const matrix<float>& a, options settings = {});
 std::expected<matrix<double>, error> cholesky(const matrix<double>& a, options settings = {});
 
+/// Factors a square matrix in place, overwriting it with `L` below the diagonal and `U` on and
+/// above it. Returns the row permutation.
+std::expected<std::vector<std::size_t>, error> lu_in_place(matrix_view<float> work,
+                                                           options settings = {});
+std::expected<std::vector<std::size_t>, error> lu_in_place(matrix_view<double> work,
+                                                           options settings = {});
+
 /// The factors of `A = Q R`, with `Q` square and orthogonal and `R` upper triangular.
 template <scalar T>
 struct qr_result {

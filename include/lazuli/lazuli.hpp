@@ -11,6 +11,7 @@
 #include <lazuli/decomp/decomp.hpp>
 #include <lazuli/expr/expr.hpp>
 #include <lazuli/io/io.hpp>
+#include <lazuli/matrix/format.hpp>
 #include <lazuli/matrix/matrix.hpp>
 #include <lazuli/matrix/vector.hpp>
 #include <lazuli/matrix/view.hpp>
@@ -68,6 +69,9 @@ using detail::decomp::inverse;
 
 /// Cholesky factor `L` with `L L^T = A`, for symmetric positive-definite matrices.
 using detail::decomp::cholesky;
+
+/// Factors a square matrix in place, overwriting it with L and U.
+using detail::decomp::lu_in_place;
 
 /// The factors of `A = Q R`.
 using detail::decomp::qr_result;

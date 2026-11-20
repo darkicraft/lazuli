@@ -3,6 +3,7 @@
 /// @file
 /// @brief The shape of things that can take part in an expression, and how an operand is stored.
 
+#include <lazuli/matrix/grid.hpp>
 #include <lazuli/matrix/view.hpp>
 
 #include <concepts>
@@ -12,15 +13,6 @@
 #include <utility>
 
 namespace lazuli::detail {
-
-/// A dense grid that can be read element by element: an owning matrix, a view or an expression.
-template <typename M>
-concept matrix_like = requires(const M& grid) {
-    typename M::value_type;
-    { grid.rows() } -> std::convertible_to<std::size_t>;
-    { grid.cols() } -> std::convertible_to<std::size_t>;
-    { grid(std::size_t{0}, std::size_t{0}) } -> std::convertible_to<typename M::value_type>;
-};
 
 /// Stores an operand the way an expression node wants it: a node is copied, a mutable view is
 /// widened to a read-only view, an owning container becomes a read-only view of its storage.

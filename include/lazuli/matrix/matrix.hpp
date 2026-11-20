@@ -36,6 +36,15 @@ class matrix {
         }
     }
 
+    /// The `n` by `n` identity.
+    [[nodiscard]] static matrix identity(std::size_t n) {
+        matrix result(n, n);
+        for (std::size_t index = 0; index < n; ++index) {
+            result(index, index) = T{1};
+        }
+        return result;
+    }
+
     /// Same shape, elements deliberately left untouched.
     [[nodiscard]] static matrix uninitialized(std::size_t rows, std::size_t cols) {
         matrix result;
@@ -193,6 +202,15 @@ class matrix {
     };
 
     [[nodiscard]] noalias_proxy noalias() noexcept { return noalias_proxy{*this}; }
+
+    /// Frobenius norm.
+    [[nodiscard]] T norm() const { return frobenius_norm(*this); }
+
+    /// Element-wise comparison within a tolerance.
+    template <matrix_like Other>
+    [[nodiscard]] bool approx_equal(const Other& other, T tolerance) const {
+        return lazuli::detail::approx_equal(*this, other, tolerance);
+    }
 
     /// Visits this matrix as a leaf of an expression.
     template <typename F>

@@ -184,6 +184,28 @@ TEST_CASE("decomp: Cholesky rejects an asymmetric matrix") {
     REQUIRE(lower.error().code == lazuli::error_code::not_positive_definite);
 }
 
+TEST_CASE("decomp: in-place LU writes the factors and returns the permutation") {
+    lazuli::matrix<double> a{{0.0, 2.0}, {3.0, 4.0}};
+    const auto pivots = lazuli::lu_in_place(a.view());
+    REQUIRE(pivots.has_value());
+    REQUIRE(pivots->size() == 2);
+
+    // Rows 0 and 1 were exchanged, so the permutation is (1, 0).
+    REQUIRE((*pivots)[0] == 1);
+    REQUIRE((*pivots)[1] == 0);
+
+    // The factors are in the same buffer: unit lower below the diagonal, upper on and above it.
+    REQUIRE(std::abs(a(0, 0) - 3.0) <= 1e-12);
+    REQUIRE(std::abs(a(0, 1) - 4.0) <= 1e-12);
+}
+
+TEST_CASE("decomp: in-place LU rejects a non-square view") {
+    lazuli::matrix<double> wide(2, 3);
+    const auto pivots = lazuli::lu_in_place(wide.view());
+    REQUIRE(!pivots.has_value());
+    REQUIRE(pivots.error().code == lazuli::error_code::not_square);
+}
+
 TEST_CASE("decomp: float works as well as double") {
     const auto a = lazuli::matrix<float>::random(30, 30, 37, {-1.0F, 1.0F});
     const auto b = lazuli::vector<float>::random(30, 41, {-1.0F, 1.0F});

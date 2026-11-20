@@ -109,6 +109,15 @@ class vector {
             self.data(), self.size(), std::size_t{1}, std::size_t{1}, self.size()};
     }
 
+    /// Frobenius norm.
+    [[nodiscard]] T norm() const { return frobenius_norm(*this); }
+
+    /// Element-wise comparison within a tolerance.
+    template <matrix_like Other>
+    [[nodiscard]] bool approx_equal(const Other& other, T tolerance) const {
+        return lazuli::detail::approx_equal(*this, other, tolerance);
+    }
+
     /// A vector reads as an n-by-1 grid inside expressions.
     [[nodiscard]] std::size_t rows() const noexcept { return size(); }
     [[nodiscard]] std::size_t cols() const noexcept { return 1; }
