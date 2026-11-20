@@ -53,6 +53,25 @@ int main() {
     print("cholesky L", *lower);
     print("L L^T", (*lower) * lower->transpose());
 
+    // QR: A = Q R with Q orthogonal and R upper triangular.
+    const auto factors_qr = lazuli::qr(a);
+    if (!factors_qr) {
+        std::printf("qr failed: %s\n", factors_qr.error().message.c_str());
+        return 1;
+    }
+    print("Q", factors_qr->q);
+    print("R", factors_qr->r);
+
+    // Eigenvalues of a symmetric matrix, ascending. Jacobi is O(n^3) per sweep, so this is for
+    // modest sizes.
+    const lazuli::matrix<double> symmetric{{2.0, 1.0}, {1.0, 2.0}};
+    const auto values = lazuli::eigenvalues(symmetric);
+    if (!values) {
+        std::printf("eigenvalues failed: %s\n", values.error().message.c_str());
+        return 1;
+    }
+    std::printf("eigenvalues: %.4f %.4f\n", (*values)[0], (*values)[1]);
+
     // Failures are values, not exceptions: a singular matrix says so.
     const lazuli::matrix<double> singular{{1.0, 2.0}, {2.0, 4.0}};
     const auto failed = lazuli::lu(singular);

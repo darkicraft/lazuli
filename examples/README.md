@@ -40,8 +40,8 @@ cmake --build build --target matrix_basic
 - **`expr/basic`** — lazy expressions: a fused elementwise chain, a product that writes straight
   into the destination, a product inside a larger expression, `noalias()`, `eval()`, a transposed
   operand, and a matrix-vector product.
-- **`linalg/basic`** — `lu` with partial pivoting, `solve`, `det`, `inverse`, `cholesky`, and
-  the error value a singular matrix produces.
+- **`linalg/basic`** — `lu` with partial pivoting, `solve`, `det`, `inverse`, `cholesky`,
+  Householder `qr`, `eigenvalues`, and the error value a singular matrix produces.
 - **`expr/threads`** — per-call thread control with `lazuli::options`: the default, one thread,
   four threads, and the same arithmetic under each.
 - **`vector/basic`** — construction, indexing, iteration with plain pointers, and

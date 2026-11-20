@@ -18,6 +18,8 @@ std::string_view to_string(error_code code) noexcept {
         return "not_square";
     case error_code::not_positive_definite:
         return "not_positive_definite";
+    case error_code::not_symmetric:
+        return "not_symmetric";
     case error_code::singular:
         return "singular";
     case error_code::not_converged:

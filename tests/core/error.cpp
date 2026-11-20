@@ -28,6 +28,7 @@ constexpr spelling spellings[] = {
     {lazuli::error_code::dimension_mismatch, "dimension_mismatch"},
     {lazuli::error_code::not_square, "not_square"},
     {lazuli::error_code::not_positive_definite, "not_positive_definite"},
+    {lazuli::error_code::not_symmetric, "not_symmetric"},
     {lazuli::error_code::singular, "singular"},
     {lazuli::error_code::not_converged, "not_converged"},
     {lazuli::error_code::io_parse_error, "io_parse_error"},

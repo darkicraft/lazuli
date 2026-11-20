@@ -69,6 +69,15 @@ using detail::decomp::inverse;
 /// Cholesky factor `L` with `L L^T = A`, for symmetric positive-definite matrices.
 using detail::decomp::cholesky;
 
+/// The factors of `A = Q R`.
+using detail::decomp::qr_result;
+
+/// Householder QR: `A = Q R` with `Q` orthogonal.
+using detail::decomp::qr;
+
+/// Eigenvalues of a symmetric matrix, ascending.
+using detail::decomp::eigenvalues;
+
 /// Stable, human readable spelling of an error code.
 using detail::to_string;
 

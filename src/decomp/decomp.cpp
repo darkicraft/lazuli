@@ -47,4 +47,20 @@ std::expected<matrix<double>, error> cholesky(const matrix<double>& a, options s
     return impl::cholesky_impl<double>(a, settings);
 }
 
+std::expected<qr_result<float>, error> qr(const matrix<float>& a, options settings) {
+    return impl::qr_impl<float>(a, settings);
+}
+
+std::expected<qr_result<double>, error> qr(const matrix<double>& a, options settings) {
+    return impl::qr_impl<double>(a, settings);
+}
+
+std::expected<vector<float>, error> eigenvalues(const matrix<float>& a) {
+    return impl::eigenvalues_impl<float>(a);
+}
+
+std::expected<vector<double>, error> eigenvalues(const matrix<double>& a) {
+    return impl::eigenvalues_impl<double>(a);
+}
+
 }  // namespace lazuli::detail::decomp

@@ -17,6 +17,7 @@ enum class error_code : std::int32_t {
     dimension_mismatch,
     not_square,
     not_positive_definite,
+    not_symmetric,
     singular,
     not_converged,
     io_parse_error,

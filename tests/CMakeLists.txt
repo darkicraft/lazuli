@@ -24,6 +24,7 @@ add_executable(
     core/aligned.cpp
     core/error.cpp
     decomp/decomp.cpp
+    decomp/qr.cpp
     expr/alias.cpp
     expr/elementwise.cpp
     expr/matmul.cpp

@@ -365,6 +365,166 @@ template <scalar T>
     return lower;
 }
 
+template <scalar T>
+[[nodiscard]] std::expected<qr_result<T>, error> qr_impl(const matrix<T>& a, options /*settings*/) {
+    const std::size_t m = a.rows();
+    const std::size_t n = a.cols();
+    if (m < n) {
+        return std::unexpected{make_error(error_code::dimension_mismatch,
+                                          "QR needs at least as many rows as columns")};
+    }
+
+    matrix<T> work = a;
+    std::vector<T> diagonal(n);
+    std::vector<T> tau(n);
+
+    for (std::size_t k = 0; k < n; ++k) {
+        T square = T{};
+        for (std::size_t row = k; row < m; ++row) {
+            square += work(row, k) * work(row, k);
+        }
+        const T norm = std::sqrt(square);
+        if (norm == T{}) {
+            diagonal[k] = T{};
+            tau[k] = T{};
+            continue;
+        }
+        const T alpha = work(k, k) >= T{} ? -norm : norm;
+        work(k, k) -= alpha;
+
+        T squared = T{};
+        for (std::size_t row = k; row < m; ++row) {
+            squared += work(row, k) * work(row, k);
+        }
+        tau[k] = T{2} / squared;
+        diagonal[k] = alpha;
+
+        for (std::size_t column = k + 1; column < n; ++column) {
+            T dot = T{};
+            for (std::size_t row = k; row < m; ++row) {
+                dot += work(row, k) * work(row, column);
+            }
+            dot *= tau[k];
+            for (std::size_t row = k; row < m; ++row) {
+                work(row, column) -= dot * work(row, k);
+            }
+        }
+    }
+
+    qr_result<T> result;
+    result.r = matrix<T>(m, n);
+    for (std::size_t row = 0; row < m; ++row) {
+        for (std::size_t column = row; column < n; ++column) {
+            result.r(row, column) = row == column ? diagonal[row] : work(row, column);
+        }
+    }
+
+    result.q = matrix<T>(m, m);
+    for (std::size_t index = 0; index < m; ++index) {
+        result.q(index, index) = T{1};
+    }
+    for (std::size_t step = n; step > 0; --step) {
+        const std::size_t k = step - 1;
+        if (tau[k] == T{}) {
+            continue;
+        }
+        for (std::size_t column = 0; column < m; ++column) {
+            T dot = T{};
+            for (std::size_t row = k; row < m; ++row) {
+                dot += work(row, k) * result.q(row, column);
+            }
+            dot *= tau[k];
+            for (std::size_t row = k; row < m; ++row) {
+                result.q(row, column) -= dot * work(row, k);
+            }
+        }
+    }
+    return result;
+}
+
+template <scalar T>
+[[nodiscard]] std::expected<vector<T>, error> eigenvalues_impl(const matrix<T>& a) {
+    if (a.rows() != a.cols()) {
+        return std::unexpected{
+            make_error(error_code::not_square, "eigenvalues need a square matrix")};
+    }
+    const std::size_t n = a.rows();
+
+    const T tolerance = std::sqrt(std::numeric_limits<T>::epsilon());
+    for (std::size_t row = 0; row < n; ++row) {
+        for (std::size_t column = 0; column < row; ++column) {
+            const T left = a(row, column);
+            const T right = a(column, row);
+            const T scale_value = std::max(std::abs(left), std::abs(right)) + T{1};
+            if (std::abs(left - right) > tolerance * scale_value) {
+                return std::unexpected{
+                    make_error(error_code::not_symmetric, "eigenvalues need a symmetric matrix")};
+            }
+        }
+    }
+
+    matrix<T> work = a;
+    T frobenius = T{};
+    for (std::size_t row = 0; row < n; ++row) {
+        for (std::size_t column = 0; column < n; ++column) {
+            frobenius += work(row, column) * work(row, column);
+        }
+    }
+    frobenius = std::sqrt(frobenius);
+    const T threshold = frobenius * std::sqrt(std::numeric_limits<T>::epsilon());
+
+    constexpr std::size_t max_sweeps = 60;
+    for (std::size_t sweep = 0; sweep < max_sweeps; ++sweep) {
+        T off_diagonal = T{};
+        for (std::size_t row = 0; row < n; ++row) {
+            for (std::size_t column = row + 1; column < n; ++column) {
+                off_diagonal += work(row, column) * work(row, column);
+            }
+        }
+        if (std::sqrt(off_diagonal) <= threshold) {
+            vector<T> values(n);
+            for (std::size_t index = 0; index < n; ++index) {
+                values[index] = work(index, index);
+            }
+            std::sort(values.begin(), values.end());
+            return values;
+        }
+
+        for (std::size_t p = 0; p + 1 < n; ++p) {
+            for (std::size_t q = p + 1; q < n; ++q) {
+                const T apq = work(p, q);
+                if (std::abs(apq) <= threshold / static_cast<T>(n)) {
+                    continue;
+                }
+                const T theta = (work(q, q) - work(p, p)) / (T{2} * apq);
+                const T sign = theta >= T{} ? T{1} : T{-1};
+                const T t = sign / (std::abs(theta) + std::sqrt(theta * theta + T{1}));
+                const T c = T{1} / std::sqrt(t * t + T{1});
+                const T s = t * c;
+
+                for (std::size_t index = 0; index < n; ++index) {
+                    if (index == p || index == q) {
+                        continue;
+                    }
+                    const T aip = work(index, p);
+                    const T aiq = work(index, q);
+                    work(index, p) = c * aip - s * aiq;
+                    work(index, q) = s * aip + c * aiq;
+                    work(p, index) = work(index, p);
+                    work(q, index) = work(index, q);
+                }
+                const T app = work(p, p);
+                const T aqq = work(q, q);
+                work(p, p) = c * c * app - T{2} * s * c * apq + s * s * aqq;
+                work(q, q) = s * s * app + T{2} * s * c * apq + c * c * aqq;
+                work(p, q) = T{};
+                work(q, p) = T{};
+            }
+        }
+    }
+    return std::unexpected{make_error(error_code::not_converged, "Jacobi sweeps did not converge")};
+}
+
 }  // namespace impl
 
 }  // namespace lazuli::detail::decomp

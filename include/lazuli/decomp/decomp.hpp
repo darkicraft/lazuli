@@ -47,4 +47,19 @@ std::expected<matrix<double>, error> inverse(const matrix<double>& a, options se
 std::expected<matrix<float>, error> cholesky(const matrix<float>& a, options settings = {});
 std::expected<matrix<double>, error> cholesky(const matrix<double>& a, options settings = {});
 
+/// The factors of `A = Q R`, with `Q` square and orthogonal and `R` upper triangular.
+template <scalar T>
+struct qr_result {
+    matrix<T> q;
+    matrix<T> r;
+};
+
+std::expected<qr_result<float>, error> qr(const matrix<float>& a, options settings = {});
+std::expected<qr_result<double>, error> qr(const matrix<double>& a, options settings = {});
+
+/// Eigenvalues of a symmetric matrix, ascending. Jacobi rotations, so this is O(n^3) per sweep
+/// and meant for modest sizes.
+std::expected<vector<float>, error> eigenvalues(const matrix<float>& a);
+std::expected<vector<double>, error> eigenvalues(const matrix<double>& a);
+
 }  // namespace lazuli::detail::decomp
