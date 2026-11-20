@@ -3,18 +3,18 @@
 /// @file
 /// @brief Row-major, contiguous, owning dense matrix.
 
+#include <lazuli/core/aligned.hpp>
+#include <lazuli/core/scalar.hpp>
+#include <lazuli/matrix/like.hpp>
+#include <lazuli/matrix/random.hpp>
+#include <lazuli/matrix/view.hpp>
+
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
 #include <initializer_list>
 #include <type_traits>
 #include <utility>
-
-#include "lazuli/core/aligned.hpp"
-#include "lazuli/core/scalar.hpp"
-#include "lazuli/matrix/like.hpp"
-#include "lazuli/matrix/random.hpp"
-#include "lazuli/matrix/view.hpp"
 
 namespace lazuli::detail {
 

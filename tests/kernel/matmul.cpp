@@ -1,14 +1,13 @@
+#include <baseline/matmul.hpp>
+#include <lazuli/kernel/matmul.hpp>
+#include <lazuli/lazuli.hpp>
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <utility>
-
-#include <lazuli/kernel/matmul.hpp>
-#include <lazuli/lazuli.hpp>
-
-#include "baseline/matmul.hpp"
 
 namespace {
 

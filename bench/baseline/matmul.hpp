@@ -10,7 +10,7 @@
 ///
 /// Do not optimise this file. If it changes, every speedup measured before the change is void.
 
-#include "lazuli/matrix/view.hpp"
+#include <lazuli/matrix/view.hpp>
 
 namespace lazuli::bench::baseline {
 

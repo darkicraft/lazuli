@@ -8,16 +8,16 @@
 /// element, so a product either writes straight into the destination (when it is the root of the
 /// expression) or materialises itself once into a cache the first time an element is read.
 
+#include <lazuli/core/options.hpp>
+#include <lazuli/core/scalar.hpp>
+#include <lazuli/kernel/matmul.hpp>
+#include <lazuli/matrix/like.hpp>
+#include <lazuli/matrix/matrix.hpp>
+
 #include <cstddef>
 #include <optional>
 #include <type_traits>
 #include <utility>
-
-#include "lazuli/core/options.hpp"
-#include "lazuli/core/scalar.hpp"
-#include "lazuli/kernel/matmul.hpp"
-#include "lazuli/matrix/like.hpp"
-#include "lazuli/matrix/matrix.hpp"
 
 namespace lazuli::detail {
 

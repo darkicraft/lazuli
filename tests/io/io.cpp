@@ -1,14 +1,14 @@
+#include <lazuli/lazuli.hpp>
+
 #include <catch2/catch_test_macros.hpp>
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <ios>
 #include <string>
 #include <string_view>
-
-#include <cstddef>
-#include <ios>
-#include <lazuli/lazuli.hpp>
 #include <system_error>
 #include <utility>
 

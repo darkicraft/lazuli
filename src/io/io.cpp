@@ -1,3 +1,8 @@
+#include <lazuli/core/error.hpp>
+#include <lazuli/io/io.hpp>
+#include <lazuli/matrix/matrix.hpp>
+#include <lazuli/matrix/view.hpp>
+
 #include <array>
 #include <bit>
 #include <cstddef>
@@ -12,11 +17,6 @@
 #include <string_view>
 #include <type_traits>
 #include <utility>
-
-#include "lazuli/core/error.hpp"
-#include "lazuli/io/io.hpp"
-#include "lazuli/matrix/matrix.hpp"
-#include "lazuli/matrix/view.hpp"
 
 namespace lazuli::detail::io {
 

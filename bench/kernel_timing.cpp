@@ -7,17 +7,16 @@
 // repetitions rather than the median, because the interesting question is "how fast can this
 // kernel go", not "what does this laptop do on average".
 
+#include <baseline/matmul.hpp>
+#include <lazuli/kernel/matmul.hpp>
+#include <lazuli/lazuli.hpp>
+
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <optional>
-
-#include <lazuli/kernel/matmul.hpp>
-#include <lazuli/lazuli.hpp>
-
-#include "baseline/matmul.hpp"
 
 namespace {
 
@@ -71,14 +70,13 @@ void report(const char* label) {
         const double scalar_seconds = time_call(a, b, out, 3, std::nullopt);
         const double one_thread = time_call(a, b, out, 5, std::size_t{1});
         const double all_threads = time_call(a, b, out, 5, std::size_t{0});
-        std::printf(
-            "  n=%-5zu baseline=%6.2f  kernel/1t=%6.2f (%.1fx)  kernel/all=%6.2f (%.1fx)\n",
-            n,
-            flops / scalar_seconds / 1e9,
-            flops / one_thread / 1e9,
-            scalar_seconds / one_thread,
-            flops / all_threads / 1e9,
-            scalar_seconds / all_threads);
+        std::printf("  n=%-5zu baseline=%6.2f  kernel/1t=%6.2f (%.1fx)  kernel/all=%6.2f (%.1fx)\n",
+                    n,
+                    flops / scalar_seconds / 1e9,
+                    flops / one_thread / 1e9,
+                    scalar_seconds / one_thread,
+                    flops / all_threads / 1e9,
+                    scalar_seconds / all_threads);
     }
 }
 

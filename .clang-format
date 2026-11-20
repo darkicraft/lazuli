@@ -35,5 +35,15 @@ AllowShortLoopsOnASingleLine: true
 SortIncludes:
   Enabled: true
   IgnoreCase: false
-IncludeBlocks: Preserve
+# Project headers in their own block, ahead of the standard library.
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<lazuli/'
+    Priority: 1
+  - Regex: '^<baseline/'
+    Priority: 1
+  - Regex: '^<catch2/'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
 ...

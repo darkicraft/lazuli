@@ -1,10 +1,9 @@
+#include <baseline/matmul.hpp>
+#include <lazuli/lazuli.hpp>
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstddef>
-
-#include <lazuli/lazuli.hpp>
-
-#include "baseline/matmul.hpp"
 
 namespace {
 

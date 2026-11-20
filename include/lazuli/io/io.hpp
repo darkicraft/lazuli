@@ -3,15 +3,15 @@
 /// @file
 /// @brief Reading and writing matrices in the compact binary format.
 
+#include <lazuli/core/error.hpp>
+#include <lazuli/core/scalar.hpp>
+#include <lazuli/matrix/matrix.hpp>
+#include <lazuli/matrix/view.hpp>
+
 #include <cstdint>
 #include <expected>
 #include <filesystem>
 #include <type_traits>
-
-#include "lazuli/core/error.hpp"
-#include "lazuli/core/scalar.hpp"
-#include "lazuli/matrix/matrix.hpp"
-#include "lazuli/matrix/view.hpp"
 
 namespace lazuli::detail::io {
 

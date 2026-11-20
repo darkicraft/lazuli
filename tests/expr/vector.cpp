@@ -1,7 +1,7 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include <lazuli/core/allocation.hpp>
 #include <lazuli/lazuli.hpp>
+
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("expr: a matrix-vector product") {
     const lazuli::matrix<double> a{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};

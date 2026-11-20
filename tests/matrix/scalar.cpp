@@ -1,9 +1,9 @@
+#include <lazuli/core/scalar.hpp>
+#include <lazuli/lazuli.hpp>
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <complex>
-
-#include <lazuli/core/scalar.hpp>
-#include <lazuli/lazuli.hpp>
 
 // Supported element types exist.
 static_assert(requires { typename lazuli::matrix<float>; });

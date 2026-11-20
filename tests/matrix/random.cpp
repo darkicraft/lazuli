@@ -1,8 +1,8 @@
+#include <lazuli/lazuli.hpp>
+
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstddef>
-
-#include <lazuli/lazuli.hpp>
 
 TEST_CASE("random: the same seed reproduces the matrix") {
     const auto first = lazuli::matrix<double>::random(16, 16, 12345, {-1.0, 1.0});

@@ -1,11 +1,11 @@
-#include <cstddef>
-#include <cstdint>
-#include <utility>
-
 #include <lazuli/core/aligned.hpp>
 
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
+
+#include <cstddef>
+#include <cstdint>
+#include <utility>
 
 namespace {
 

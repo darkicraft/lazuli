@@ -1,7 +1,7 @@
+#include <lazuli/core/allocation.hpp>
+
 #include <atomic>
 #include <cstddef>
-
-#include "lazuli/core/allocation.hpp"
 
 namespace lazuli::detail {
 

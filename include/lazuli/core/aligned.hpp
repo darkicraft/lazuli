@@ -3,12 +3,12 @@
 /// @file
 /// @brief Aligned allocation used by the owning containers.
 
+#include <lazuli/core/allocation.hpp>
+#include <lazuli/core/error.hpp>
+
 #include <cstddef>
 #include <cstdlib>
 #include <utility>
-
-#include "lazuli/core/allocation.hpp"
-#include "lazuli/core/error.hpp"
 
 namespace lazuli::detail {
 

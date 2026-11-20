@@ -6,6 +6,10 @@
 // Operands come from files on purpose: nothing on the timed path may be visible to the compiler
 // as a constant.
 
+#include <baseline/matmul.hpp>
+#include <lazuli/kernel/matmul.hpp>
+#include <lazuli/lazuli.hpp>
+
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -14,11 +18,6 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include <lazuli/kernel/matmul.hpp>
-#include <lazuli/lazuli.hpp>
-
-#include "baseline/matmul.hpp"
 
 namespace {
 

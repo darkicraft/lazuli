@@ -3,13 +3,13 @@
 /// @file
 /// @brief Non-owning windows over strided, dense two-dimensional blocks.
 
+#include <lazuli/core/error.hpp>
+#include <lazuli/core/options.hpp>
+#include <lazuli/core/scalar.hpp>
+
 #include <concepts>
 #include <cstddef>
 #include <type_traits>
-
-#include "lazuli/core/error.hpp"
-#include "lazuli/core/options.hpp"
-#include "lazuli/core/scalar.hpp"
 
 namespace lazuli::detail {
 

@@ -3,13 +3,13 @@
 /// @file
 /// @brief The shape of things that can take part in an expression, and how an operand is stored.
 
+#include <lazuli/matrix/view.hpp>
+
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
 #include <utility>
-
-#include "lazuli/matrix/view.hpp"
 
 namespace lazuli::detail {
 

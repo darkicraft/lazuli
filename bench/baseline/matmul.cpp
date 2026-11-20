@@ -1,7 +1,7 @@
-#include "baseline/matmul.hpp"
+#include <baseline/matmul.hpp>
+#include <lazuli/matrix/view.hpp>
 
 #include <cstddef>
-#include <lazuli/matrix/view.hpp>
 
 namespace lazuli::bench::baseline {
 

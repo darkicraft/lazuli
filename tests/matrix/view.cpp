@@ -1,10 +1,10 @@
-#include <cstddef>
-#include <type_traits>
-
 #include <lazuli/lazuli.hpp>
 
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
+
+#include <cstddef>
+#include <type_traits>
 
 namespace {
 

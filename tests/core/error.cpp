@@ -1,20 +1,20 @@
-#include <cstdint>
-#include <iterator>
-#include <new>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <type_traits>
-
+#include <lazuli/core/error.hpp>
 #include <lazuli/lazuli.hpp>
 
 #include <catch2/catch_message.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
+
 #include <cstddef>
+#include <cstdint>
 #include <exception>
-#include <lazuli/core/error.hpp>
+#include <iterator>
+#include <new>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
 
 namespace {
 

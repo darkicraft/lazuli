@@ -6,13 +6,13 @@
 /// This is the only include a user needs. Every declaration below lives in `lazuli::detail`;
 /// this block is the public surface, and nothing outside it is supported.
 
-#include "lazuli/core/error.hpp"
-#include "lazuli/core/options.hpp"
-#include "lazuli/expr/expr.hpp"
-#include "lazuli/io/io.hpp"
-#include "lazuli/matrix/matrix.hpp"
-#include "lazuli/matrix/vector.hpp"
-#include "lazuli/matrix/view.hpp"
+#include <lazuli/core/error.hpp>
+#include <lazuli/core/options.hpp>
+#include <lazuli/expr/expr.hpp>
+#include <lazuli/io/io.hpp>
+#include <lazuli/matrix/matrix.hpp>
+#include <lazuli/matrix/vector.hpp>
+#include <lazuli/matrix/view.hpp>
 
 /// Public Lazuli API.
 namespace lazuli {

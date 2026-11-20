@@ -1,4 +1,4 @@
-#include "lazuli/kernel/matmul.hpp"
+#include <lazuli/kernel/matmul.hpp>
 
 #include <algorithm>
 #include <cstddef>

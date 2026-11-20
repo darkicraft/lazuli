@@ -6,8 +6,8 @@
 /// The definitions live in the library, not in this header, so the blocking, packing and SIMD
 /// stay out of user translation units. `bench/baseline` keeps a frozen naive copy for comparison.
 
-#include "lazuli/core/options.hpp"
-#include "lazuli/matrix/view.hpp"
+#include <lazuli/core/options.hpp>
+#include <lazuli/matrix/view.hpp>
 
 namespace lazuli::detail::kernel {
 

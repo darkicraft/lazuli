@@ -6,14 +6,14 @@
 // Reports GFLOPS per thread count and the speedup over one thread. The machine is a 6-core,
 // 12-thread 15 W part, so expect the curve to flatten at 6 and to lose ground past it.
 
+#include <lazuli/kernel/matmul.hpp>
+#include <lazuli/lazuli.hpp>
+
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <vector>
-
-#include <lazuli/kernel/matmul.hpp>
-#include <lazuli/lazuli.hpp>
 
 namespace {
 
