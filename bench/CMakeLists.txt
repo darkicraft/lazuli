@@ -24,6 +24,15 @@ if(LAZULI_BUILD_BENCH)
                    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
                    FOLDER "bench")
 
+    add_executable(bench_decomp decomp.cpp)
+    target_link_libraries(bench_decomp PRIVATE lazuli::lazuli)
+    lazuli_set_warnings(bench_decomp)
+    set_target_properties(
+        bench_decomp
+        PROPERTIES OUTPUT_NAME decomp
+                   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
+                   FOLDER "bench")
+
     add_executable(bench_time_matmul time_matmul.cpp)
     target_link_libraries(bench_time_matmul PRIVATE lazuli_baseline)
     lazuli_set_warnings(bench_time_matmul)

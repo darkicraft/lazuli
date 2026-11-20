@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
+#include <cstdint>
 #include <initializer_list>
 #include <type_traits>
 #include <utility>
@@ -31,6 +32,16 @@ class vector {
         if (!m_buffer.empty()) {
             std::fill_n(m_buffer.data(), m_buffer.size(), T{});
         }
+    }
+
+    /// Uniformly distributed values in `bounds`, reproducible from `seed`.
+    [[nodiscard]] static vector random(std::size_t size, std::uint64_t seed, interval<T> bounds) {
+        vector result = uninitialized(size);
+        splitmix64 generator{seed};
+        for (std::size_t index = 0; index < size; ++index) {
+            result[index] = uniform_between<T>(generator, bounds);
+        }
+        return result;
     }
 
     [[nodiscard]] static vector uninitialized(std::size_t size) {

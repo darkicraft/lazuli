@@ -46,6 +46,12 @@ class singular_matrix : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
+/// A Cholesky factorisation met a matrix that is not symmetric positive definite.
+class not_positive_definite : public std::runtime_error {
+  public:
+    using std::runtime_error::runtime_error;
+};
+
 /// An index fell outside its container.
 class out_of_bounds : public std::out_of_range {
   public:

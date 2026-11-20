@@ -8,6 +8,7 @@
 
 #include <lazuli/core/error.hpp>
 #include <lazuli/core/options.hpp>
+#include <lazuli/decomp/decomp.hpp>
 #include <lazuli/expr/expr.hpp>
 #include <lazuli/io/io.hpp>
 #include <lazuli/matrix/matrix.hpp>
@@ -29,6 +30,9 @@ using detail::dimension_mismatch;
 /// A factorisation met a matrix it cannot decompose.
 using detail::singular_matrix;
 
+/// A Cholesky factorisation met a matrix that is not positive definite.
+using detail::not_positive_definite;
+
 /// An index fell outside its container.
 using detail::out_of_bounds;
 
@@ -46,6 +50,24 @@ using detail::matrix_view;
 
 /// Row-major, contiguous, owning one-dimensional array.
 using detail::vector;
+
+/// The factors of `P A = L U`.
+using detail::decomp::lu_result;
+
+/// Factors a square matrix: `P A = L U`.
+using detail::decomp::lu;
+
+/// Solves `A x = b` through the LU factors.
+using detail::decomp::solve;
+
+/// Determinant, zero for a singular matrix.
+using detail::decomp::det;
+
+/// Inverse through the LU factors.
+using detail::decomp::inverse;
+
+/// Cholesky factor `L` with `L L^T = A`, for symmetric positive-definite matrices.
+using detail::decomp::cholesky;
 
 /// Stable, human readable spelling of an error code.
 using detail::to_string;

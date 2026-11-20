@@ -15,6 +15,7 @@ The binary is named after the source file, and the build mirrors this tree:
 | `examples/matrix/views.cpp` | `build/examples/matrix/views` |
 | `examples/matrix/random.cpp` | `build/examples/matrix/random` |
 | `examples/vector/basic.cpp` | `build/examples/vector/basic` |
+| `examples/linalg/basic.cpp` | `build/examples/linalg/basic` |
 | `examples/io/basic.cpp` | `build/examples/io/basic` |
 | `examples/expr/basic.cpp` | `build/examples/expr/basic` |
 | `examples/expr/threads.cpp` | `build/examples/expr/threads` |
@@ -39,6 +40,8 @@ cmake --build build --target matrix_basic
 - **`expr/basic`** — lazy expressions: a fused elementwise chain, a product that writes straight
   into the destination, a product inside a larger expression, `noalias()`, `eval()`, a transposed
   operand, and a matrix-vector product.
+- **`linalg/basic`** — `lu` with partial pivoting, `solve`, `det`, `inverse`, `cholesky`, and
+  the error value a singular matrix produces.
 - **`expr/threads`** — per-call thread control with `lazuli::options`: the default, one thread,
   four threads, and the same arithmetic under each.
 - **`vector/basic`** — construction, indexing, iteration with plain pointers, and

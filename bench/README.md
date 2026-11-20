@@ -154,3 +154,28 @@ same shape, earlier, at 512: 3.62x at six threads.
 Against the frozen baseline (3.9 GFLOPS at 1024, single threaded) the threaded kernel is about
 20x. That comparison is the one the project reports; the single-thread figures above are there to
 show where the threading gains stop.
+
+## M5 — LU and Cholesky
+
+Both are blocked on `panel_width = 64`, and both use the matmul kernel for their trailing updates,
+so the thread setting reaches them; the panel factorisation itself is serial, because the
+dependencies run down it.
+
+```sh
+cmake --build build/release --target bench_decomp
+./build/release/bench/decomp
+```
+
+| n | lu/1t | lu/all | chol/1t | chol/all |
+|---|---|---|---|---|
+| 512 | 4.25 | 5.03 (1.2x) | 2.39 | 2.73 (1.1x) |
+| 1024 | 5.85 | 7.54 (1.3x) | 3.26 | 4.03 (1.2x) |
+
+(128 and 256 are too small to report: panel and allocation overhead dominate and the numbers do
+not repeat.)
+
+These are far below the matmul kernel's 17/55 GFLOPS, and honestly so: the panel work is level-2
+BLAS with a rank-1 update, which is memory-bound. A TRSM-based panel, recursive blocking, and a
+blocked Cholesky panel solve are the standard fixes and are out of scope here. The factorisations
+are validated for correctness (residuals and reconstruction in `tests/decomp/`), not tuned.
+
