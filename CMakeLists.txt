@@ -63,6 +63,28 @@ if(LAZULI_BUILD_TESTS)
     set(lazuli_guards ${CMAKE_CURRENT_SOURCE_DIR}/cmake/guards.cmake)
     add_test(NAME guards COMMAND ${CMAKE_COMMAND} -P ${lazuli_guards})
 
+    # One tiny object target per public header, so the build system compiles them in parallel
+    # instead of one compiler launch after another. `ctest` then just builds the aggregate.
+    file(
+        GLOB_RECURSE lazuli_headers
+        RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+    set(lazuli_header_targets "")
+    foreach(header IN LISTS lazuli_headers)
+        string(MAKE_C_IDENTIFIER "${header}" slug)
+        set(source "${CMAKE_CURRENT_BINARY_DIR}/header_checks/${slug}.cpp")
+        file(WRITE "${source}" "#include <${header}>\n")
+        add_library(header_check_${slug} OBJECT EXCLUDE_FROM_ALL "${source}")
+        target_include_directories(header_check_${slug}
+                                   PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+        target_compile_features(header_check_${slug} PRIVATE cxx_std_23)
+        lazuli_set_warnings(header_check_${slug})
+        list(APPEND lazuli_header_targets header_check_${slug})
+    endforeach()
+    add_custom_target(header_checks DEPENDS ${lazuli_header_targets})
+    add_test(NAME headers COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target
+                                  header_checks)
+
     add_subdirectory(tests)
 endif()
 

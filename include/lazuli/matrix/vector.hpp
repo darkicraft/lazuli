@@ -6,6 +6,7 @@
 #include <lazuli/core/aligned.hpp>
 #include <lazuli/core/scalar.hpp>
 #include <lazuli/matrix/like.hpp>
+#include <lazuli/matrix/random.hpp>
 #include <lazuli/matrix/view.hpp>
 
 #include <algorithm>
