@@ -35,10 +35,10 @@ inline constexpr std::size_t panel_width = 64;
 
 /// Factors `work` in place; `pivots` must start as the identity permutation.
 ///
-/// The panel is copied into a compact buffer before it is factorised: a panel of a row-major
-/// matrix is column-oriented, so every access in the pivot search, the scaling and the rank-1
-/// update would otherwise be an n-element stride. Row swaps are applied to the parts of the row
-/// that live outside the panel, because a permutation touches the whole row.
+/// The panel is copied into a compact buffer, the diagonal block is factored there, and the rows
+/// below it are solved against that block (the TRSM step) in a row-parallel loop. Row swaps are
+/// applied to the parts of the row outside the panel, because a permutation touches the whole
+/// row, and the trailing block is updated with the matmul kernel in one subtraction pass.
 template <scalar T>
 [[nodiscard]] std::expected<std::size_t, error> lu_factor(matrix_view<T> work,
                                                           std::vector<std::size_t>& pivots,
@@ -62,6 +62,9 @@ template <scalar T>
             }
         }
 
+        // Factor the diagonal block. The pivot search still spans every row of the column, so
+        // the factorisation stays stable; only the update is confined to the block, the rest of
+        // the column is solved afterwards.
         for (std::size_t column = 0; column < width; ++column) {
             std::size_t pivot = column;
             T largest = std::abs(at(column, column));
@@ -80,7 +83,6 @@ template <scalar T>
                 for (std::size_t c = 0; c < width; ++c) {
                     std::swap(at(column, c), at(pivot, c));
                 }
-                // The permutation applies to the whole row, not just the panel.
                 const std::size_t first = k + column;
                 const std::size_t second = k + pivot;
                 for (std::size_t c = 0; c < k; ++c) {
@@ -94,10 +96,10 @@ template <scalar T>
             }
 
             const T pivot_value = at(column, column);
-            for (std::size_t row = column + 1; row < rows; ++row) {
+            for (std::size_t row = column + 1; row < width; ++row) {
                 at(row, column) /= pivot_value;
             }
-            for (std::size_t row = column + 1; row < rows; ++row) {
+            for (std::size_t row = column + 1; row < width; ++row) {
                 const T multiplier = at(row, column);
                 if (multiplier == T{}) {
                     continue;
@@ -108,25 +110,33 @@ template <scalar T>
             }
         }
 
+        // Rows below the block: solve L21 against the factorised block. Kept serial on
+        // purpose: this loop is memory-bound, and spreading it over the hardware threads
+        // measured 4x slower than running it on one. The threads belong in the trailing update.
+        for (std::size_t row = width; row < rows; ++row) {
+            T* target = &at(row, 0);
+            for (std::size_t column = 0; column < width; ++column) {
+                const T* pivot_row = &at(column, 0);
+                T value = target[column];
+                for (std::size_t inner = 0; inner < column; ++inner) {
+                    value -= target[inner] * pivot_row[inner];
+                }
+                target[column] = value / pivot_row[column];
+            }
+        }
+
         for (std::size_t row = 0; row < rows; ++row) {
             for (std::size_t column = 0; column < width; ++column) {
                 work(k + row, k + column) = at(row, column);
             }
         }
 
-        // A22 -= L21 * U12, with the kernel doing the multiply.
         if (end < n) {
             const std::size_t trailing = n - end;
-            matrix<T> product(trailing, trailing);
-            kernel::matmul(work.block(end, k, trailing, width),
-                           work.block(k, end, width, trailing),
-                           product.view(),
-                           settings);
-            for (std::size_t row = 0; row < trailing; ++row) {
-                for (std::size_t column = 0; column < trailing; ++column) {
-                    work(end + row, end + column) -= product(row, column);
-                }
-            }
+            kernel::matmul_subtract(work.block(end, k, trailing, width),
+                                    work.block(k, end, width, trailing),
+                                    work.block(end, end, trailing, trailing),
+                                    settings);
         }
     }
     return swaps;
@@ -300,7 +310,6 @@ template <scalar T>
         const std::size_t end = std::min(k + panel_width, n);
         const std::size_t width = end - k;
 
-        // Factor the diagonal block in place.
         for (std::size_t column = 0; column < width; ++column) {
             T diagonal = work(k + column, k + column);
             for (std::size_t inner = 0; inner < column; ++inner) {
@@ -325,29 +334,26 @@ template <scalar T>
             continue;
         }
 
-        // Solve L21 * L11^T = A21 for the rows below the block.
+        const std::size_t trailing = n - end;
+        // Serial for the same reason as the LU panel solve: it is memory-bound, and threads
+        // make it slower. The trailing update below is where the parallelism goes.
+        const std::size_t stride = work.row_stride();
         for (std::size_t row = end; row < n; ++row) {
+            T* target = work.data() + row * stride + k;
             for (std::size_t column = 0; column < width; ++column) {
-                T value = work(row, k + column);
+                const T* diagonal_row = work.data() + (k + column) * stride + k;
+                T value = target[column];
                 for (std::size_t inner = 0; inner < column; ++inner) {
-                    value -= work(row, k + inner) * work(k + column, k + inner);
+                    value -= target[inner] * diagonal_row[inner];
                 }
-                work(row, k + column) = value / work(k + column, k + column);
+                target[column] = value / diagonal_row[column];
             }
         }
 
-        // A22 -= L21 * L21^T, with the kernel doing the multiply.
-        const std::size_t trailing = n - end;
-        matrix<T> product(trailing, trailing);
-        kernel::matmul(work.block(end, k, trailing, width),
-                       work.block(end, k, trailing, width).transpose(),
-                       product.view(),
-                       settings);
-        for (std::size_t row = 0; row < trailing; ++row) {
-            for (std::size_t column = 0; column < trailing; ++column) {
-                work(end + row, end + column) -= product(row, column);
-            }
-        }
+        kernel::matmul_subtract(work.block(end, k, trailing, width),
+                                work.block(end, k, trailing, width).transpose(),
+                                work.block(end, end, trailing, trailing),
+                                settings);
     }
 
     matrix<T> lower(n, n);

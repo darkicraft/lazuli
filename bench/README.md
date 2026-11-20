@@ -168,14 +168,37 @@ cmake --build build/release --target bench_decomp
 
 | n | lu/1t | lu/all | chol/1t | chol/all |
 |---|---|---|---|---|
-| 512 | 4.25 | 5.03 (1.2x) | 2.39 | 2.73 (1.1x) |
-| 1024 | 5.85 | 7.54 (1.3x) | 3.26 | 4.03 (1.2x) |
+| 512 | 4.07 | 4.27 (1.05x) | 2.50 | 2.77 (1.1x) |
+| 1024 | 6.19 | 7.64 (1.2x) | 3.52 | 4.82 (1.4x) |
 
 (128 and 256 are too small to report: panel and allocation overhead dominate and the numbers do
 not repeat.)
 
-These are far below the matmul kernel's 17/55 GFLOPS, and honestly so: the panel work is level-2
-BLAS with a rank-1 update, which is memory-bound. A TRSM-based panel, recursive blocking, and a
-blocked Cholesky panel solve are the standard fixes and are out of scope here. The factorisations
-are validated for correctness (residuals and reconstruction in `tests/decomp/`), not tuned.
+These are 5-8x below the matmul kernel, and the profile says why. At 1024 the Cholesky time splits
+as block factorisation 1 ms, panel solve 22 ms, kernel update 18 ms, and the update's subtraction
+6 ms. The panel solve is level-2 and memory-bound, so it is the floor no matter how fast the
+kernel is.
 
+Three attempts were made, measured over five runs each, and the honest result is that **none of
+them moved the numbers beyond this machine's noise (±15%)**:
+
+- **Fusing the subtraction into the kernel** (`matmul_subtract`, `fnmadd`) removes a temporary,
+  its zeroing and a separate pass. Kept: it is simpler and cheaper in allocations, even though the
+  end-to-end timings do not separate it from the old version.
+- **Parallelising the panel solve** over rows made LU **4x slower** at 12 threads (244 ms against
+  62 ms at 4 threads): it is bandwidth-bound and oversubscription turns it into contention.
+  Reverted.
+- **Blocking the Cholesky panel solve** into 16-wide sub-blocks with kernel updates measured
+  slightly *worse* (median 4.11 against ~4.4 GFLOPS) because the extra small kernel calls cost
+  more than the level-2 work they replace. Reverted.
+
+What would actually be needed is a properly tuned level-3 TRSM (and recursive blocking) written
+against a quiet measurement setup; on a 15 W laptop with ±15% run-to-run spread that is not a
+change this project can validate, so the factorisations stay correct-but-unoptimised.
+
+Medians of five runs (GFLOPS):
+
+| n | lu/1t | lu/all | chol/1t | chol/all |
+|---|---|---|---|---|
+| 512 | 4.14 | 4.44 | 2.48 | 2.60 |
+| 1024 | 6.19 | 6.42 | 3.51 | 4.32 |

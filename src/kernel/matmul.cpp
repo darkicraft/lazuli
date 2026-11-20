@@ -30,14 +30,20 @@ constexpr std::size_t parallel_threshold = 64 * 64 * 64;
 
 /// Straightforward i-k-j product. Used for non-x86 targets, pre-AVX2 CPUs and destinations whose
 /// columns are not contiguous, where the vector stores cannot be used.
-template <typename T>
+template <typename T, bool subtract>
 void scalar_matmul(matrix_view<const T> a, matrix_view<const T> b, matrix_view<T> out) {
-    out.fill(T{});
+    if constexpr (!subtract) {
+        out.fill(T{});
+    }
     for (std::size_t row = 0; row < a.rows(); ++row) {
         for (std::size_t inner = 0; inner < a.cols(); ++inner) {
             const T value = a(row, inner);
             for (std::size_t column = 0; column < b.cols(); ++column) {
-                out(row, column) += value * b(inner, column);
+                if constexpr (subtract) {
+                    out(row, column) -= value * b(inner, column);
+                } else {
+                    out(row, column) += value * b(inner, column);
+                }
             }
         }
     }
@@ -75,6 +81,10 @@ struct simd<double> {
         vector a, vector b, vector c) noexcept {
         return _mm256_fmadd_pd(a, b, c);
     }
+    [[nodiscard]] __attribute__((target("avx2,fma"))) static vector multiply_subtract(
+        vector a, vector b, vector c) noexcept {
+        return _mm256_fnmadd_pd(a, b, c);
+    }
 };
 
 template <>
@@ -98,6 +108,10 @@ struct simd<float> {
         vector a, vector b, vector c) noexcept {
         return _mm256_fmadd_ps(a, b, c);
     }
+    [[nodiscard]] __attribute__((target("avx2,fma"))) static vector multiply_subtract(
+        vector a, vector b, vector c) noexcept {
+        return _mm256_fnmadd_ps(a, b, c);
+    }
 };
 
 /// Adds one tile of `ap * bp` into `c`. Full tiles only; the driver handles the edges.
@@ -105,7 +119,7 @@ struct simd<float> {
 /// Both panels are packed in micro-panel order: for each depth step the rows of `ap` and the
 /// columns of `bp` are contiguous, so one cache line feeds each side of the multiply instead of
 /// one line per element.
-template <typename T>
+template <typename T, bool subtract>
 __attribute__((target("avx2,fma"))) void avx2_tile(
     const T* ap, const T* bp, std::size_t ldb, T* c, std::size_t ldc, std::size_t kc) {
     using simd_type = simd<T>;
@@ -120,8 +134,13 @@ __attribute__((target("avx2,fma"))) void avx2_tile(
         const T* a = ap + p * tile_rows;
         const vector bv = simd_type::load(bp + p * ldb);
         for (std::size_t row = 0; row < tile_rows; ++row) {
-            accumulator[row] =
-                simd_type::multiply_add(simd_type::broadcast(a + row), bv, accumulator[row]);
+            if constexpr (subtract) {
+                accumulator[row] = simd_type::multiply_subtract(
+                    simd_type::broadcast(a + row), bv, accumulator[row]);
+            } else {
+                accumulator[row] =
+                    simd_type::multiply_add(simd_type::broadcast(a + row), bv, accumulator[row]);
+            }
         }
     }
 
@@ -132,7 +151,7 @@ __attribute__((target("avx2,fma"))) void avx2_tile(
 
 /// Accumulates part of a tile from the packed panels, for the rows and columns the register
 /// tile does not cover.
-template <typename T>
+template <typename T, bool subtract>
 void scalar_tile(const T* ap,
                  const T* bp,
                  std::size_t ldb,
@@ -145,14 +164,18 @@ void scalar_tile(const T* ap,
         for (std::size_t column = 0; column < cols; ++column) {
             T sum = c[row * ldc + column];
             for (std::size_t p = 0; p < kc; ++p) {
-                sum += ap[p * tile_rows + row] * bp[p * ldb + column];
+                if constexpr (subtract) {
+                    sum -= ap[p * tile_rows + row] * bp[p * ldb + column];
+                } else {
+                    sum += ap[p * tile_rows + row] * bp[p * ldb + column];
+                }
             }
             c[row * ldc + column] = sum;
         }
     }
 }
 
-template <typename T>
+template <typename T, bool subtract>
 __attribute__((target("avx2,fma"))) void avx2_matmul(matrix_view<const T> a,
                                                      matrix_view<const T> b,
                                                      matrix_view<T> out,
@@ -163,7 +186,9 @@ __attribute__((target("avx2,fma"))) void avx2_matmul(matrix_view<const T> a,
     const std::size_t n = b.cols();
 
     std::vector<T> packed_b((block_n + tile_cols) * block_k);
-    out.fill(T{});
+    if constexpr (!subtract) {
+        out.fill(T{});
+    }
 
     // Never touch the process-wide OpenMP defaults; ask for a thread count per call instead.
     // At most one worker per row block: asking for twelve workers to spread two blocks of work
@@ -218,12 +243,13 @@ __attribute__((target("avx2,fma"))) void avx2_matmul(matrix_view<const T> a,
 
                 for (std::size_t i0 = 0; i0 < rows_done; i0 += tile_rows) {
                     for (std::size_t j0 = 0; j0 < cols_done; j0 += tile_cols) {
-                        avx2_tile<T>(packed_a.data() + (i0 / tile_rows) * kc * tile_rows,
-                                     packed_b.data() + (j0 / tile_cols) * kc * tile_cols,
-                                     tile_cols,
-                                     out.data() + (ic + i0) * out.row_stride() + (jc + j0),
-                                     out.row_stride(),
-                                     kc);
+                        avx2_tile<T, subtract>(
+                            packed_a.data() + (i0 / tile_rows) * kc * tile_rows,
+                            packed_b.data() + (j0 / tile_cols) * kc * tile_cols,
+                            tile_cols,
+                            out.data() + (ic + i0) * out.row_stride() + (jc + j0),
+                            out.row_stride(),
+                            kc);
                     }
                 }
 
@@ -232,14 +258,15 @@ __attribute__((target("avx2,fma"))) void avx2_matmul(matrix_view<const T> a,
                     const T* panel =
                         packed_a.data() + (i0 / tile_rows) * kc * tile_rows + (i0 % tile_rows);
                     for (std::size_t j0 = 0; j0 < cols_done; j0 += tile_cols) {
-                        scalar_tile<T>(panel,
-                                       packed_b.data() + (j0 / tile_cols) * kc * tile_cols,
-                                       tile_cols,
-                                       out.data() + (ic + i0) * out.row_stride() + (jc + j0),
-                                       out.row_stride(),
-                                       1,
-                                       tile_cols,
-                                       kc);
+                        scalar_tile<T, subtract>(
+                            panel,
+                            packed_b.data() + (j0 / tile_cols) * kc * tile_cols,
+                            tile_cols,
+                            out.data() + (ic + i0) * out.row_stride() + (jc + j0),
+                            out.row_stride(),
+                            1,
+                            tile_cols,
+                            kc);
                     }
                 }
 
@@ -248,14 +275,15 @@ __attribute__((target("avx2,fma"))) void avx2_matmul(matrix_view<const T> a,
                     for (std::size_t i0 = 0; i0 < mc; ++i0) {
                         const T* panel =
                             packed_a.data() + (i0 / tile_rows) * kc * tile_rows + (i0 % tile_rows);
-                        scalar_tile<T>(panel,
-                                       packed_b.data() + (cols_done / tile_cols) * kc * tile_cols,
-                                       tile_cols,
-                                       out.data() + (ic + i0) * out.row_stride() + (jc + cols_done),
-                                       out.row_stride(),
-                                       1,
-                                       nc - cols_done,
-                                       kc);
+                        scalar_tile<T, subtract>(
+                            panel,
+                            packed_b.data() + (cols_done / tile_cols) * kc * tile_cols,
+                            tile_cols,
+                            out.data() + (ic + i0) * out.row_stride() + (jc + cols_done),
+                            out.row_stride(),
+                            1,
+                            nc - cols_done,
+                            kc);
                     }
                 }
             }
@@ -267,31 +295,60 @@ __attribute__((target("avx2,fma"))) void avx2_matmul(matrix_view<const T> a,
 
 }  // namespace
 
+template <bool subtract>
+void dispatch(matrix_view<const float> a,
+              matrix_view<const float> b,
+              matrix_view<float> out,
+              options settings) {
+#if defined(__x86_64__)
+    if (has_avx2() && out.col_stride() == 1) {
+        avx2_matmul<float, subtract>(a, b, out, settings);
+        return;
+    }
+#endif
+    scalar_matmul<float, subtract>(a, b, out);
+}
+
+template <bool subtract>
+void dispatch(matrix_view<const double> a,
+              matrix_view<const double> b,
+              matrix_view<double> out,
+              options settings) {
+#if defined(__x86_64__)
+    if (has_avx2() && out.col_stride() == 1) {
+        avx2_matmul<double, subtract>(a, b, out, settings);
+        return;
+    }
+#endif
+    scalar_matmul<double, subtract>(a, b, out);
+}
+
 void matmul(matrix_view<const float> a,
             matrix_view<const float> b,
             matrix_view<float> out,
             options settings) {
-#if defined(__x86_64__)
-    if (has_avx2() && out.col_stride() == 1) {
-        avx2_matmul<float>(a, b, out, settings);
-        return;
-    }
-#endif
-    scalar_matmul(a, b, out);
+    dispatch<false>(a, b, out, settings);
 }
 
 void matmul(matrix_view<const double> a,
             matrix_view<const double> b,
             matrix_view<double> out,
             options settings) {
-#if defined(__x86_64__)
-    // The vector stores need contiguous columns in the destination.
-    if (has_avx2() && out.col_stride() == 1) {
-        avx2_matmul<double>(a, b, out, settings);
-        return;
-    }
-#endif
-    scalar_matmul(a, b, out);
+    dispatch<false>(a, b, out, settings);
+}
+
+void matmul_subtract(matrix_view<const float> a,
+                     matrix_view<const float> b,
+                     matrix_view<float> out,
+                     options settings) {
+    dispatch<true>(a, b, out, settings);
+}
+
+void matmul_subtract(matrix_view<const double> a,
+                     matrix_view<const double> b,
+                     matrix_view<double> out,
+                     options settings) {
+    dispatch<true>(a, b, out, settings);
 }
 
 }  // namespace lazuli::detail::kernel

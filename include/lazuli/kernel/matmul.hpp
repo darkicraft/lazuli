@@ -24,4 +24,14 @@ void matmul(matrix_view<const double> a,
             matrix_view<double> out,
             options settings = {});
 
+/// `out -= a * b`, without a temporary for the product. Used by the factorisation updates.
+void matmul_subtract(matrix_view<const float> a,
+                     matrix_view<const float> b,
+                     matrix_view<float> out,
+                     options settings = {});
+void matmul_subtract(matrix_view<const double> a,
+                     matrix_view<const double> b,
+                     matrix_view<double> out,
+                     options settings = {});
+
 }  // namespace lazuli::detail::kernel
