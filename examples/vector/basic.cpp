@@ -34,6 +34,12 @@ int main() {
     values[0] = 10.0;
     values.at(2) = 30.0;
 
+    // A seeded random vector, and filling one in place.
+    lazuli::vector<double> noise = lazuli::vector<double>::random(4, 21, {-1.0, 1.0});
+    std::printf("random: %.3f %.3f %.3f %.3f\n", noise[0], noise[1], noise[2], noise[3]);
+    noise.fill(0.5);
+    std::printf("after fill(0.5): %.3f %.3f\n", noise[0], noise[3]);
+
     // Iterators are plain pointers, so range-for and algorithms work directly.
     double total = 0.0;
     for (const double value : values) {

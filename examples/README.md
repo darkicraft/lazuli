@@ -15,7 +15,11 @@ The binary is named after the source file, and the build mirrors this tree:
 | `examples/matrix/views.cpp` | `build/examples/matrix/views` |
 | `examples/matrix/random.cpp` | `build/examples/matrix/random` |
 | `examples/vector/basic.cpp` | `build/examples/vector/basic` |
-| `examples/linalg/basic.cpp` | `build/examples/linalg/basic` |
+| `examples/decomp/lu.cpp` | `build/examples/decomp/lu` |
+| `examples/decomp/solve.cpp` | `build/examples/decomp/solve` |
+| `examples/decomp/cholesky.cpp` | `build/examples/decomp/cholesky` |
+| `examples/decomp/qr.cpp` | `build/examples/decomp/qr` |
+| `examples/decomp/eigen.cpp` | `build/examples/decomp/eigen` |
 | `examples/io/basic.cpp` | `build/examples/io/basic` |
 | `examples/expr/basic.cpp` | `build/examples/expr/basic` |
 | `examples/expr/threads.cpp` | `build/examples/expr/threads` |
