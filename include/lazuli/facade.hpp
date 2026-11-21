@@ -7,8 +7,9 @@
 /// a typed exception; `lazuli::nt::` exposes it unchanged, for code that must not throw. Both
 /// reach the same implementation.
 ///
-/// The throwing block disappears when the compiler is invoked with exceptions disabled, so the
-/// umbrella stays usable in a `-fno-exceptions` translation unit. `lazuli::nt::` is always there.
+/// When the compiler is invoked with exceptions disabled, `lazuli::nt::` remains unaffected and
+/// every call to a `lazuli::` name stops at compile time with a message pointing at its `nt`
+/// equivalent.
 
 #include <lazuli/core/error.hpp>
 #include <lazuli/decomp/decomp.hpp>
@@ -148,6 +149,103 @@ void save(const std::filesystem::path& path, const detail::matrix<T>& data) {
     if (!result) {
         detail::fail(result.error());
     }
+}
+
+}  // namespace io
+
+}  // namespace lazuli
+
+#else
+
+/// The default facade is unavailable without exceptions. These stubs exist only so that a misuse
+/// names the fix instead of failing with "no member named 'lu' in namespace 'lazuli'".
+namespace lazuli::detail {
+
+template <typename>
+inline constexpr bool dependent_false = false;
+
+}  // namespace lazuli::detail
+
+namespace lazuli {
+
+template <detail::scalar T>
+detail::decomp::lu_result<T> lu(const detail::matrix<T>&, detail::options = {}) {
+    static_assert(detail::dependent_false<T>,
+                  "lazuli: this translation unit has exceptions disabled; use lazuli::nt::lu "
+                  "instead");
+    return {};
+}
+
+template <detail::scalar T>
+detail::vector<T> solve(const detail::matrix<T>&, const detail::vector<T>&, detail::options = {}) {
+    static_assert(detail::dependent_false<T>,
+                  "lazuli: this translation unit has exceptions disabled; use lazuli::nt::solve "
+                  "instead");
+    return {};
+}
+
+template <detail::scalar T>
+detail::matrix<T> inverse(const detail::matrix<T>&, detail::options = {}) {
+    static_assert(detail::dependent_false<T>,
+                  "lazuli: this translation unit has exceptions disabled; use "
+                  "lazuli::nt::inverse instead");
+    return {};
+}
+
+template <detail::scalar T>
+detail::matrix<T> cholesky(const detail::matrix<T>&, detail::options = {}) {
+    static_assert(detail::dependent_false<T>,
+                  "lazuli: this translation unit has exceptions disabled; use "
+                  "lazuli::nt::cholesky instead");
+    return {};
+}
+
+template <detail::scalar T>
+std::vector<std::size_t> lu_in_place(detail::matrix_view<T>, detail::options = {}) {
+    static_assert(detail::dependent_false<T>,
+                  "lazuli: this translation unit has exceptions disabled; use "
+                  "lazuli::nt::lu_in_place instead");
+    return {};
+}
+
+template <detail::scalar T>
+detail::decomp::qr_result<T> qr(const detail::matrix<T>&, detail::options = {}) {
+    static_assert(detail::dependent_false<T>,
+                  "lazuli: this translation unit has exceptions disabled; use lazuli::nt::qr "
+                  "instead");
+    return {};
+}
+
+template <detail::scalar T>
+detail::vector<T> eigenvalues(const detail::matrix<T>&) {
+    static_assert(detail::dependent_false<T>,
+                  "lazuli: this translation unit has exceptions disabled; use "
+                  "lazuli::nt::eigenvalues instead");
+    return {};
+}
+
+namespace io {
+
+template <detail::scalar T>
+detail::matrix<T> load(const std::filesystem::path&) {
+    static_assert(detail::dependent_false<T>,
+                  "lazuli: this translation unit has exceptions disabled; use "
+                  "lazuli::nt::io::load instead");
+    return {};
+}
+
+template <detail::scalar T>
+void save(const std::filesystem::path&, detail::matrix_view<T>) {
+    static_assert(detail::dependent_false<T>,
+                  "lazuli: this translation unit has exceptions disabled; use "
+                  "lazuli::nt::io::save instead");
+}
+
+template <detail::scalar T>
+void save(const std::filesystem::path&, const detail::matrix<T>&) {
+    static_assert(detail::dependent_false<T>,
+                  "lazuli: this translation unit has exceptions disabled; use "
+                  "lazuli::nt::io::save instead");
 }
 
 }  // namespace io
