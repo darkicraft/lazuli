@@ -1,20 +1,26 @@
 # Benchmarks
 
-Two things live here:
+The pieces here:
 
 - `baseline/` — the frozen naive matrix multiplication. It has no blocking, no threads and no
   explicit vectorisation, and it is the denominator for every speedup the project reports.
   **Do not optimise it.** If it changes, every number measured before the change is void.
-- `time_matmul.cpp` — a CLI that times the baseline on two matrices read from files.
+- `time_matmul.cpp` — a CLI that times the baseline or the kernel on two matrices read from files.
+- `kernel_timing.cpp`, `thread_sweep.cpp`, `decomp.cpp` — the in-process timing tools whose output
+  is quoted below.
+- `openblas_timing.cpp` — the optional OpenBLAS reference column. It is built only when
+  `pkg-config` finds `openblas`, and it is report context, never a library dependency.
 
 The tests link `baseline/` as their yardstick, so it is built even with
-`-DLAZULI_BUILD_BENCH=OFF`; only the CLI is gated by that option.
+`-DLAZULI_BUILD_BENCH=OFF`; only the CLIs are gated by that option.
 
 ## Build
 
 ```sh
 cmake -S . -B build/release -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build/release --target bench_time_matmul
+cmake --build build/release --target bench_kernel_timing
+cmake --build build/release --target bench_openblas_timing   # only if OpenBLAS was found
 ```
 
 ## Run
@@ -202,3 +208,38 @@ Medians of five runs (GFLOPS):
 |---|---|---|---|---|
 | 512 | 4.14 | 4.44 | 2.48 | 2.60 |
 | 1024 | 6.19 | 6.42 | 3.51 | 4.32 |
+
+## Reference: OpenBLAS
+
+This column answers "how far is this kernel from a mature BLAS?", not "did we beat OpenBLAS?".
+It is report context: OpenBLAS is ten years of hand-tuned kernels, and it is not a dependency of
+the library.
+
+`bench_openblas_timing` calls `cblas_dgemm` / `cblas_sgemm` on the same row-major buffers, with
+the same sizes, warm-up and best-of-nine policy. It is deliberately a **separate process** from
+`kernel_timing`: OpenMP and OpenBLAS both keep worker pools warm, and running them back to back
+measures the two runtimes contending for the same cores. Build it with `pkg-config` present:
+
+```sh
+cmake --build build/release --target bench_openblas_timing
+./build/release/bench/openblas_timing 6
+```
+
+The argument is the OpenBLAS worker count. Six means one thread per physical core on this 6C/12T
+part; twelve threads was repeatedly slower and far less stable, because OpenBLAS's pthread pool
+spins while the other SMT siblings want the same execution units.
+
+One paired session (2026-11-21, GCC 16.2, OpenBLAS 0.3.32 pthread, 1024³):
+
+| 1024³ | kernel 1t | OpenBLAS 1t | kernel 12t | OpenBLAS 6t |
+|---|---|---|---|---|
+| double GFLOPS | 15.7 | 20.8 | 56.7 | 84.6 |
+| float GFLOPS | 29.2 | 47.4 | 89.0 | 176.5 |
+
+The single-thread columns are the stable comparison: OpenBLAS is about 1.3x faster in double and
+1.6x in float per core. The all-thread columns move by tens of percent between runs on this
+15 W laptop (the M4 table above has a better kernel day at 80.6 GFLOPS double), so treat them as
+an indication of the ceiling rather than a precise ratio.
+
+OpenBLAS is discovered with `pkg-config --libs openblas`. Without it the target is skipped and
+the rest of the build is unchanged; no library or test depends on it.

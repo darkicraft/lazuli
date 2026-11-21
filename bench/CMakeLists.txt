@@ -6,6 +6,12 @@ target_include_directories(lazuli_baseline PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 lazuli_set_warnings(lazuli_baseline)
 
 if(LAZULI_BUILD_BENCH)
+    # The reference column is optional: it is report context, not a library dependency.
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(LAZULI_OPENBLAS QUIET IMPORTED_TARGET openblas)
+    endif()
+
     add_executable(bench_kernel_timing kernel_timing.cpp)
     target_link_libraries(bench_kernel_timing PRIVATE lazuli_baseline)
     lazuli_set_warnings(bench_kernel_timing)
@@ -14,6 +20,23 @@ if(LAZULI_BUILD_BENCH)
         PROPERTIES OUTPUT_NAME kernel_timing
                    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
                    FOLDER "bench")
+
+    if(LAZULI_OPENBLAS_FOUND)
+        add_executable(bench_openblas_timing openblas_timing.cpp reference/openblas.cpp)
+        target_link_libraries(bench_openblas_timing PRIVATE lazuli::lazuli
+                                                         PkgConfig::LAZULI_OPENBLAS)
+        target_include_directories(bench_openblas_timing
+                                   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+        lazuli_set_warnings(bench_openblas_timing)
+        set_target_properties(
+            bench_openblas_timing
+            PROPERTIES OUTPUT_NAME openblas_timing
+                       RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
+                       FOLDER "bench")
+        message(STATUS "bench: OpenBLAS ${LAZULI_OPENBLAS_VERSION} reference enabled")
+    else()
+        message(STATUS "bench: OpenBLAS not found; the reference column is skipped")
+    endif()
 
     add_executable(bench_thread_sweep thread_sweep.cpp)
     target_link_libraries(bench_thread_sweep PRIVATE lazuli::lazuli)
