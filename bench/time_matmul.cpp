@@ -72,13 +72,13 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-    const auto loaded_a = lazuli::io::load<double>(a_path);
+    const auto loaded_a = lazuli::nt::io::load<double>(a_path);
     if (!loaded_a) {
         std::fprintf(
             stderr, "cannot load %s: %s\n", a_path.c_str(), loaded_a.error().message.c_str());
         return 1;
     }
-    const auto loaded_b = lazuli::io::load<double>(b_path);
+    const auto loaded_b = lazuli::nt::io::load<double>(b_path);
     if (!loaded_b) {
         std::fprintf(
             stderr, "cannot load %s: %s\n", b_path.c_str(), loaded_b.error().message.c_str());
@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
                 checksum);
 
     if (!output_path.empty()) {
-        const auto written = lazuli::io::save(output_path, out);
+        const auto written = lazuli::nt::io::save(output_path, out);
         if (!written) {
             std::fprintf(stderr,
                          "cannot write %s: %s\n",

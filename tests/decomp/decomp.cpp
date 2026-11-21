@@ -50,7 +50,7 @@ namespace {
 
 TEST_CASE("decomp: LU reproduces PA on a matrix that needs pivoting") {
     const lazuli::matrix<double> a{{0.0, 2.0}, {3.0, 4.0}};
-    const auto factors = lazuli::lu(a);
+    const auto factors = lazuli::nt::lu(a);
     REQUIRE(factors.has_value());
 
     const lazuli::matrix<double> product = factors->l * factors->u;
@@ -64,7 +64,7 @@ TEST_CASE("decomp: LU reproduces PA on a matrix that needs pivoting") {
 
 TEST_CASE("decomp: LU on a random matrix reproduces PA") {
     const auto a = lazuli::matrix<double>::random(40, 40, 7, {-1.0, 1.0});
-    const auto factors = lazuli::lu(a);
+    const auto factors = lazuli::nt::lu(a);
     REQUIRE(factors.has_value());
     const lazuli::matrix<double> product = factors->l * factors->u;
     const lazuli::matrix<double> expected = permutation_of(*factors) * a;
@@ -73,14 +73,14 @@ TEST_CASE("decomp: LU on a random matrix reproduces PA") {
 
 TEST_CASE("decomp: LU rejects a non-square matrix") {
     const lazuli::matrix<double> wide(2, 3);
-    const auto factors = lazuli::lu(wide);
+    const auto factors = lazuli::nt::lu(wide);
     REQUIRE(!factors.has_value());
     REQUIRE(factors.error().code == lazuli::error_code::not_square);
 }
 
 TEST_CASE("decomp: LU reports a singular matrix") {
     const lazuli::matrix<double> singular{{1.0, 2.0}, {2.0, 4.0}};
-    const auto factors = lazuli::lu(singular);
+    const auto factors = lazuli::nt::lu(singular);
     REQUIRE(!factors.has_value());
     REQUIRE(factors.error().code == lazuli::error_code::singular);
 }
@@ -88,7 +88,7 @@ TEST_CASE("decomp: LU reports a singular matrix") {
 TEST_CASE("decomp: solve") {
     const auto a = lazuli::matrix<double>::random(50, 50, 11, {-1.0, 1.0});
     const auto b = lazuli::vector<double>::random(50, 13, {-1.0, 1.0});
-    const auto x = lazuli::solve(a, b);
+    const auto x = lazuli::nt::solve(a, b);
     REQUIRE(x.has_value());
     REQUIRE(solve_residual(a, *x, b) <= 1e-10);
 }
@@ -96,8 +96,8 @@ TEST_CASE("decomp: solve") {
 TEST_CASE("decomp: solve honours the thread setting") {
     const auto a = lazuli::matrix<double>::random(120, 120, 17, {-1.0, 1.0});
     const auto b = lazuli::vector<double>::random(120, 19, {-1.0, 1.0});
-    const auto one = lazuli::solve(a, b, lazuli::options{1});
-    const auto four = lazuli::solve(a, b, lazuli::options{4});
+    const auto one = lazuli::nt::solve(a, b, lazuli::options{1});
+    const auto four = lazuli::nt::solve(a, b, lazuli::options{4});
     REQUIRE(one.has_value());
     REQUIRE(four.has_value());
     for (std::size_t index = 0; index < b.size(); ++index) {
@@ -108,7 +108,7 @@ TEST_CASE("decomp: solve honours the thread setting") {
 TEST_CASE("decomp: solve rejects a mismatched right-hand side") {
     const lazuli::matrix<double> a(3, 3);
     const lazuli::vector<double> b(2);
-    const auto x = lazuli::solve(a, b);
+    const auto x = lazuli::nt::solve(a, b);
     REQUIRE(!x.has_value());
     REQUIRE(x.error().code == lazuli::error_code::dimension_mismatch);
 }
@@ -116,7 +116,7 @@ TEST_CASE("decomp: solve rejects a mismatched right-hand side") {
 TEST_CASE("decomp: solve reports a singular matrix") {
     const lazuli::matrix<double> singular{{0.0, 1.0}, {0.0, 2.0}};
     const lazuli::vector<double> b{1.0, 1.0};
-    const auto x = lazuli::solve(singular, b);
+    const auto x = lazuli::nt::solve(singular, b);
     REQUIRE(!x.has_value());
     REQUIRE(x.error().code == lazuli::error_code::singular);
 }
@@ -130,7 +130,7 @@ TEST_CASE("decomp: determinant of known matrices") {
 
 TEST_CASE("decomp: determinant matches the product of the LU diagonal") {
     const auto a = lazuli::matrix<double>::random(30, 30, 23, {-1.0, 1.0});
-    const auto factors = lazuli::lu(a);
+    const auto factors = lazuli::nt::lu(a);
     REQUIRE(factors.has_value());
     double product = factors->swaps % 2 == 0 ? 1.0 : -1.0;
     for (std::size_t index = 0; index < 30; ++index) {
@@ -141,7 +141,7 @@ TEST_CASE("decomp: determinant matches the product of the LU diagonal") {
 
 TEST_CASE("decomp: inverse multiplies back to the identity") {
     const auto a = lazuli::matrix<double>::random(40, 40, 29, {-1.0, 1.0});
-    const auto inverse = lazuli::inverse(a);
+    const auto inverse = lazuli::nt::inverse(a);
     REQUIRE(inverse.has_value());
 
     lazuli::matrix<double> identity(40, 40);
@@ -153,7 +153,7 @@ TEST_CASE("decomp: inverse multiplies back to the identity") {
 
 TEST_CASE("decomp: inverse rejects a singular matrix") {
     const lazuli::matrix<double> singular{{1.0, 1.0}, {1.0, 1.0}};
-    const auto inverse = lazuli::inverse(singular);
+    const auto inverse = lazuli::nt::inverse(singular);
     REQUIRE(!inverse.has_value());
     REQUIRE(inverse.error().code == lazuli::error_code::singular);
 }
@@ -165,28 +165,28 @@ TEST_CASE("decomp: Cholesky rebuilds a positive-definite matrix") {
         spd(index, index) += 30.0;
     }
 
-    const auto lower = lazuli::cholesky(spd);
+    const auto lower = lazuli::nt::cholesky(spd);
     REQUIRE(lower.has_value());
     REQUIRE(max_abs_difference((*lower) * lower->transpose(), spd) <= 1e-10);
 }
 
 TEST_CASE("decomp: Cholesky rejects a matrix that is not positive definite") {
     const lazuli::matrix<double> indefinite{{1.0, 2.0}, {2.0, 1.0}};
-    const auto lower = lazuli::cholesky(indefinite);
+    const auto lower = lazuli::nt::cholesky(indefinite);
     REQUIRE(!lower.has_value());
     REQUIRE(lower.error().code == lazuli::error_code::not_positive_definite);
 }
 
 TEST_CASE("decomp: Cholesky rejects an asymmetric matrix") {
     const lazuli::matrix<double> asymmetric{{1.0, 2.0}, {0.0, 1.0}};
-    const auto lower = lazuli::cholesky(asymmetric);
+    const auto lower = lazuli::nt::cholesky(asymmetric);
     REQUIRE(!lower.has_value());
     REQUIRE(lower.error().code == lazuli::error_code::not_positive_definite);
 }
 
 TEST_CASE("decomp: in-place LU writes the factors and returns the permutation") {
     lazuli::matrix<double> a{{0.0, 2.0}, {3.0, 4.0}};
-    const auto pivots = lazuli::lu_in_place(a.view());
+    const auto pivots = lazuli::nt::lu_in_place(a.view());
     REQUIRE(pivots.has_value());
     REQUIRE(pivots->size() == 2);
 
@@ -201,7 +201,7 @@ TEST_CASE("decomp: in-place LU writes the factors and returns the permutation") 
 
 TEST_CASE("decomp: in-place LU rejects a non-square view") {
     lazuli::matrix<double> wide(2, 3);
-    const auto pivots = lazuli::lu_in_place(wide.view());
+    const auto pivots = lazuli::nt::lu_in_place(wide.view());
     REQUIRE(!pivots.has_value());
     REQUIRE(pivots.error().code == lazuli::error_code::not_square);
 }
@@ -210,7 +210,7 @@ TEST_CASE("decomp: float works as well as double") {
     const auto a = lazuli::matrix<float>::random(30, 30, 37, {-1.0F, 1.0F});
     const auto b = lazuli::vector<float>::random(30, 41, {-1.0F, 1.0F});
 
-    const auto x = lazuli::solve(a, b);
+    const auto x = lazuli::nt::solve(a, b);
     REQUIRE(x.has_value());
     float worst = 0.0F;
     for (std::size_t row = 0; row < a.rows(); ++row) {
@@ -222,7 +222,7 @@ TEST_CASE("decomp: float works as well as double") {
     }
     REQUIRE(worst <= 1e-3F);
 
-    const auto factors = lazuli::lu(a);
+    const auto factors = lazuli::nt::lu(a);
     REQUIRE(factors.has_value());
     REQUIRE(std::abs(lazuli::det(a)) > 0.0F);
 }

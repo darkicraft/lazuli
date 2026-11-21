@@ -3,8 +3,9 @@
 /// @file
 /// @brief Factorisations and the operations derived from them.
 ///
-/// Everything returns `std::expected` rather than throwing: the throwing facade is a thin layer
-/// that is not written yet, and adding it here would put `throw` back into a public header.
+/// Everything returns `std::expected` rather than throwing. The public throwing facade is a
+/// header-only layer in `lazuli/facade.hpp`; keeping `throw` out of this header means it stays
+/// usable with exceptions disabled.
 
 #include <lazuli/core/error.hpp>
 #include <lazuli/core/options.hpp>

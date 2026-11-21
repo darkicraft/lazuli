@@ -21,6 +21,10 @@ void exercise() {
     report.code = lazuli::error_code::none;
     (void)v;
     (void)report;
+
+    // The no-throw facade stays available with exceptions disabled.
+    const auto factors = lazuli::nt::lu(m);
+    (void)factors;
 }
 
 }  // namespace

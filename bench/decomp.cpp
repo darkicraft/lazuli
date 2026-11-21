@@ -47,11 +47,11 @@ int main() {
         const double lu_flops = 2.0 / 3.0 * size * size * size;
         const double chol_flops = 1.0 / 3.0 * size * size * size;
 
-        const double lu_one = best_of(4, [&] { (void)lazuli::lu(a, lazuli::options{1}); });
-        const double lu_all = best_of(4, [&] { (void)lazuli::lu(a); });
+        const double lu_one = best_of(4, [&] { (void)lazuli::nt::lu(a, lazuli::options{1}); });
+        const double lu_all = best_of(4, [&] { (void)lazuli::nt::lu(a); });
         const double chol_one =
-            best_of(4, [&] { (void)lazuli::cholesky(spd, lazuli::options{1}); });
-        const double chol_all = best_of(4, [&] { (void)lazuli::cholesky(spd); });
+            best_of(4, [&] { (void)lazuli::nt::cholesky(spd, lazuli::options{1}); });
+        const double chol_all = best_of(4, [&] { (void)lazuli::nt::cholesky(spd); });
 
         std::printf(
             "n=%-5zu lu/1t=%6.2f lu/all=%6.2f (%4.2fx)  chol/1t=%6.2f "

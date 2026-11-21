@@ -73,4 +73,32 @@ namespace {
 #endif
 }
 
+[[noreturn]] void fail(const error& failure) {
+#if defined(__cpp_exceptions)
+    switch (failure.code) {
+    case error_code::none:
+        throw std::logic_error{"lazuli: a failure without an error code"};
+    case error_code::dimension_mismatch:
+        throw dimension_mismatch{failure.message};
+    case error_code::not_square:
+        throw not_square{failure.message};
+    case error_code::not_symmetric:
+        throw not_symmetric{failure.message};
+    case error_code::not_positive_definite:
+        throw not_positive_definite{failure.message};
+    case error_code::singular:
+        throw singular_matrix{failure.message};
+    case error_code::not_converged:
+        throw not_converged{failure.message};
+    case error_code::io_parse_error:
+        throw io_error{failure.message};
+    case error_code::out_of_bounds:
+        throw out_of_bounds{failure.message};
+    }
+    throw std::logic_error{"lazuli: unknown error code"};
+#else
+    abort_with(failure.message);
+#endif
+}
+
 }  // namespace lazuli::detail

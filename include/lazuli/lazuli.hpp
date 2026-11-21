@@ -3,13 +3,15 @@
 /// @file
 /// @brief Umbrella header for the public Lazuli API.
 ///
-/// This is the only include a user needs. Every declaration below lives in `lazuli::detail`;
-/// this block is the public surface, and nothing outside it is supported.
+/// This is the only include a user needs. Every type below lives in `lazuli::detail`; this block
+/// is the public surface, and nothing outside it is supported. The algorithms are declared here
+/// in two forms: `lazuli::` throws on failure, `lazuli::nt::` returns `std::expected`.
 
 #include <lazuli/core/error.hpp>
 #include <lazuli/core/options.hpp>
 #include <lazuli/decomp/decomp.hpp>
 #include <lazuli/expr/expr.hpp>
+#include <lazuli/facade.hpp>
 #include <lazuli/io/io.hpp>
 #include <lazuli/matrix/format.hpp>
 #include <lazuli/matrix/matrix.hpp>
@@ -28,11 +30,23 @@ using detail::error;
 /// Two operands, or a request, disagreed about a size.
 using detail::dimension_mismatch;
 
+/// A factorisation was handed a matrix that is not square.
+using detail::not_square;
+
+/// A symmetric-only algorithm was handed a matrix that is not symmetric.
+using detail::not_symmetric;
+
 /// A factorisation met a matrix it cannot decompose.
 using detail::singular_matrix;
 
 /// A Cholesky factorisation met a matrix that is not positive definite.
 using detail::not_positive_definite;
+
+/// An iterative algorithm ran out of sweeps before meeting its tolerance.
+using detail::not_converged;
+
+/// A file could not be read or written in the expected format.
+using detail::io_error;
 
 /// An index fell outside its container.
 using detail::out_of_bounds;
@@ -55,45 +69,13 @@ using detail::vector;
 /// The factors of `P A = L U`.
 using detail::decomp::lu_result;
 
-/// Factors a square matrix: `P A = L U`.
-using detail::decomp::lu;
-
-/// Solves `A x = b` through the LU factors.
-using detail::decomp::solve;
-
-/// Determinant, zero for a singular matrix.
-using detail::decomp::det;
-
-/// Inverse through the LU factors.
-using detail::decomp::inverse;
-
-/// Cholesky factor `L` with `L L^T = A`, for symmetric positive-definite matrices.
-using detail::decomp::cholesky;
-
-/// Factors a square matrix in place, overwriting it with L and U.
-using detail::decomp::lu_in_place;
-
 /// The factors of `A = Q R`.
 using detail::decomp::qr_result;
 
-/// Householder QR: `A = Q R` with `Q` orthogonal.
-using detail::decomp::qr;
-
-/// Eigenvalues of a symmetric matrix, ascending.
-using detail::decomp::eigenvalues;
+/// Determinant, zero for a singular matrix.
+using detail::decomp::det;
 
 /// Stable, human readable spelling of an error code.
 using detail::to_string;
 
 }  // namespace lazuli
-
-/// Reading and writing matrices.
-namespace lazuli::io {
-
-/// Reads a matrix previously written by `save<T>`.
-using detail::io::load;
-
-/// Writes a matrix in the compact binary format.
-using detail::io::save;
-
-}  // namespace lazuli::io

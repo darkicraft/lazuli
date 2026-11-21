@@ -47,14 +47,15 @@ cmake --build build --target matrix_basic
   operand, and a matrix-vector product.
 - **`decomp/lu`, `decomp/solve`, `decomp/cholesky`, `decomp/qr`, `decomp/eigen`** — `lu` with
   partial pivoting, the in-place factorisation, `solve`, `det`, `inverse`, `cholesky`,
-  Householder `qr`, `eigenvalues`, and the error value a singular matrix produces.
+  Householder `qr`, `eigenvalues`, and the same failure through the throwing and no-throw
+  facades.
 - **`expr/threads`** — per-call thread control with `lazuli::options`: the default, one thread,
   four threads, and the same arithmetic under each.
 - **`vector/basic`** — construction, indexing, iteration with plain pointers, and
   `as_column()` handing a vector to matrix-shaped code without copying.
 - **`errors/handling`** — what is thrown where, catching through the standard
-  exception bases, the stable `error_code` values, and the `error` value type for
-  code that must not throw.
+  exception bases, the stable `error_code` values, the throwing `lazuli::` facade, and the
+  `lazuli::nt::` facade that returns the failure as a value.
 
 ## Adding an example
 

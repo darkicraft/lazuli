@@ -60,10 +60,10 @@ template <typename T>
 void round_trip(const char* name) {
     scratch_file file{name};
     const lazuli::matrix<T> original{{T{1}, T{2}, T{3}}, {T{4}, T{5}, T{6}}};
-    const auto written = lazuli::io::save(file.path(), original);
+    const auto written = lazuli::nt::io::save(file.path(), original);
     REQUIRE(written.has_value());
 
-    const auto loaded = lazuli::io::load<T>(file.path());
+    const auto loaded = lazuli::nt::io::load<T>(file.path());
     REQUIRE(loaded.has_value());
     REQUIRE(loaded->rows() == original.rows());
     REQUIRE(loaded->cols() == original.cols());
@@ -90,8 +90,8 @@ TEST_CASE("io: degenerate shapes round trip") {
                               std::pair<std::size_t, std::size_t>{0, 4},
                               std::pair<std::size_t, std::size_t>{4, 0}}) {
         const lazuli::matrix<double> original(shape.first, shape.second);
-        REQUIRE(lazuli::io::save(file.path(), original).has_value());
-        const auto loaded = lazuli::io::load<double>(file.path());
+        REQUIRE(lazuli::nt::io::save(file.path(), original).has_value());
+        const auto loaded = lazuli::nt::io::load<double>(file.path());
         REQUIRE(loaded.has_value());
         REQUIRE(loaded->rows() == shape.first);
         REQUIRE(loaded->cols() == shape.second);
@@ -102,9 +102,9 @@ TEST_CASE("io: degenerate shapes round trip") {
 TEST_CASE("io: strided views are written row by row") {
     scratch_file file{"strided"};
     const lazuli::matrix<double> original{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}};
-    REQUIRE(lazuli::io::save(file.path(), original.transpose()).has_value());
+    REQUIRE(lazuli::nt::io::save(file.path(), original.transpose()).has_value());
 
-    const auto loaded = lazuli::io::load<double>(file.path());
+    const auto loaded = lazuli::nt::io::load<double>(file.path());
     REQUIRE(loaded.has_value());
     REQUIRE(loaded->rows() == 3);
     REQUIRE(loaded->cols() == 2);
@@ -118,9 +118,9 @@ TEST_CASE("io: strided views are written row by row") {
 TEST_CASE("io: a block view writes only its window") {
     scratch_file file{"block"};
     const lazuli::matrix<double> original{{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}};
-    REQUIRE(lazuli::io::save(file.path(), original.block(1, 1, 2, 2)).has_value());
+    REQUIRE(lazuli::nt::io::save(file.path(), original.block(1, 1, 2, 2)).has_value());
 
-    const auto loaded = lazuli::io::load<double>(file.path());
+    const auto loaded = lazuli::nt::io::load<double>(file.path());
     REQUIRE(loaded.has_value());
     REQUIRE(loaded->rows() == 2);
     REQUIRE((*loaded)(0, 0) == 5.0);
@@ -130,7 +130,7 @@ TEST_CASE("io: a block view writes only its window") {
 TEST_CASE("io: a missing file is an io_parse_error") {
     const std::string path = (fs::temp_directory_path() / "lazuli_io_absent.lzm").string();
     fs::remove(path);
-    const auto loaded = lazuli::io::load<double>(path);
+    const auto loaded = lazuli::nt::io::load<double>(path);
     REQUIRE(!loaded.has_value());
     REQUIRE(loaded.error().code == lazuli::error_code::io_parse_error);
     REQUIRE(loaded.error().message.find("cannot open") != std::string::npos);
@@ -139,7 +139,7 @@ TEST_CASE("io: a missing file is an io_parse_error") {
 TEST_CASE("io: a bad magic is rejected") {
     scratch_file file{"magic"};
     write_bytes(file.path(), header_bytes("NOPE", 1, 2, 1, 1));
-    const auto loaded = lazuli::io::load<double>(file.path());
+    const auto loaded = lazuli::nt::io::load<double>(file.path());
     REQUIRE(!loaded.has_value());
     REQUIRE(loaded.error().code == lazuli::error_code::io_parse_error);
 }
@@ -147,7 +147,7 @@ TEST_CASE("io: a bad magic is rejected") {
 TEST_CASE("io: a truncated header is rejected") {
     scratch_file file{"short_header"};
     write_bytes(file.path(), "LZLI\x01");
-    const auto loaded = lazuli::io::load<double>(file.path());
+    const auto loaded = lazuli::nt::io::load<double>(file.path());
     REQUIRE(!loaded.has_value());
     REQUIRE(loaded.error().message.find("truncated header") != std::string::npos);
 }
@@ -159,7 +159,7 @@ TEST_CASE("io: a truncated payload is rejected") {
     bytes.append(reinterpret_cast<const char*>(&one_value), sizeof one_value);
     write_bytes(file.path(), bytes);
 
-    const auto loaded = lazuli::io::load<double>(file.path());
+    const auto loaded = lazuli::nt::io::load<double>(file.path());
     REQUIRE(!loaded.has_value());
     REQUIRE(loaded.error().message.find("truncated payload") != std::string::npos);
 }
@@ -167,8 +167,8 @@ TEST_CASE("io: a truncated payload is rejected") {
 TEST_CASE("io: the scalar type must match the request") {
     scratch_file file{"tag"};
     const lazuli::matrix<float> values{{1.0F, 2.0F}};
-    REQUIRE(lazuli::io::save(file.path(), values).has_value());
-    const auto loaded = lazuli::io::load<double>(file.path());
+    REQUIRE(lazuli::nt::io::save(file.path(), values).has_value());
+    const auto loaded = lazuli::nt::io::load<double>(file.path());
     REQUIRE(!loaded.has_value());
     REQUIRE(loaded.error().message.find("scalar type") != std::string::npos);
 }
@@ -177,7 +177,7 @@ TEST_CASE("io: impossible dimensions are rejected") {
     scratch_file file{"huge"};
     write_bytes(file.path(),
                 header_bytes("LZLI", 1, 2, std::uint64_t{1} << 40, std::uint64_t{1} << 40));
-    const auto loaded = lazuli::io::load<double>(file.path());
+    const auto loaded = lazuli::nt::io::load<double>(file.path());
     REQUIRE(!loaded.has_value());
     REQUIRE(loaded.error().code == lazuli::error_code::io_parse_error);
 }
@@ -186,7 +186,7 @@ TEST_CASE("io: an unwritable path is an error") {
     const std::string path =
         (fs::temp_directory_path() / "lazuli_no_such_directory" / "out.lzm").string();
     const lazuli::matrix<double> values(1, 1);
-    const auto written = lazuli::io::save(path, values);
+    const auto written = lazuli::nt::io::save(path, values);
     REQUIRE(!written.has_value());
     REQUIRE(written.error().code == lazuli::error_code::io_parse_error);
 }

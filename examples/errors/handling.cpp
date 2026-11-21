@@ -45,6 +45,25 @@ int main() {
         std::printf("as std::exception\n");
     }
 
+    // The algorithms throw the same way. A non-square factorisation is the
+    // easiest one to provoke.
+    const lazuli::matrix<double> wide(2, 3);
+    try {
+        (void)lazuli::lu(wide);
+    } catch (const lazuli::not_square& failure) {
+        std::printf("not_square: %s\n", failure.what());
+    }
+
+    // The no-throw facade reports the same failure as a value.
+    const auto rejected = lazuli::nt::lu(wide);
+    if (!rejected) {
+        const auto spelling = lazuli::to_string(rejected.error().code);
+        std::printf("nt::lu: %s (%.*s)\n",
+                    rejected.error().message.c_str(),
+                    static_cast<int>(spelling.size()),
+                    spelling.data());
+    }
+
     // Codes are stable, so a caller can switch on them instead of parsing text.
     std::printf("error codes:\n");
     print_spelling(lazuli::error_code::dimension_mismatch);

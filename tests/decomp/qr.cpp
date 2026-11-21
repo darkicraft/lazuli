@@ -45,7 +45,7 @@ namespace {
 
 TEST_CASE("decomp: QR of a square matrix") {
     const auto a = lazuli::matrix<double>::random(40, 40, 43, {-1.0, 1.0});
-    const auto factors = lazuli::qr(a);
+    const auto factors = lazuli::nt::qr(a);
     REQUIRE(factors.has_value());
     REQUIRE(factors->q.rows() == 40);
     REQUIRE(factors->q.cols() == 40);
@@ -57,7 +57,7 @@ TEST_CASE("decomp: QR of a square matrix") {
 
 TEST_CASE("decomp: Q is orthogonal") {
     const auto a = lazuli::matrix<double>::random(30, 30, 47, {-1.0, 1.0});
-    const auto factors = lazuli::qr(a);
+    const auto factors = lazuli::nt::qr(a);
     REQUIRE(factors.has_value());
     const lazuli::matrix<double> product = factors->q.transpose() * factors->q;
     REQUIRE(max_abs_difference(product, identity(30)) <= 1e-12);
@@ -65,7 +65,7 @@ TEST_CASE("decomp: Q is orthogonal") {
 
 TEST_CASE("decomp: QR of a tall matrix") {
     const auto a = lazuli::matrix<double>::random(50, 30, 53, {-1.0, 1.0});
-    const auto factors = lazuli::qr(a);
+    const auto factors = lazuli::nt::qr(a);
     REQUIRE(factors.has_value());
     REQUIRE(factors->q.rows() == 50);
     REQUIRE(factors->q.cols() == 50);
@@ -76,7 +76,7 @@ TEST_CASE("decomp: QR of a tall matrix") {
 }
 
 TEST_CASE("decomp: QR of the identity") {
-    const auto factors = lazuli::qr(identity(4));
+    const auto factors = lazuli::nt::qr(identity(4));
     REQUIRE(factors.has_value());
     REQUIRE(max_abs_difference(factors->q * factors->r, identity(4)) <= 1e-12);
 
@@ -90,14 +90,14 @@ TEST_CASE("decomp: QR of the identity") {
 
 TEST_CASE("decomp: QR of a rank-deficient matrix still reconstructs") {
     lazuli::matrix<double> a{{1.0, 2.0}, {2.0, 4.0}};
-    const auto factors = lazuli::qr(a);
+    const auto factors = lazuli::nt::qr(a);
     REQUIRE(factors.has_value());
     REQUIRE(max_abs_difference(factors->q * factors->r, a) <= 1e-12);
 }
 
 TEST_CASE("decomp: QR rejects a matrix with more columns than rows") {
     const lazuli::matrix<double> wide(3, 5);
-    const auto factors = lazuli::qr(wide);
+    const auto factors = lazuli::nt::qr(wide);
     REQUIRE(!factors.has_value());
     REQUIRE(factors.error().code == lazuli::error_code::dimension_mismatch);
 }
@@ -108,7 +108,7 @@ TEST_CASE("decomp: eigenvalues of a diagonal matrix") {
     diagonal(1, 1) = -2.0;
     diagonal(2, 2) = 1.0;
 
-    const auto values = lazuli::eigenvalues(diagonal);
+    const auto values = lazuli::nt::eigenvalues(diagonal);
     REQUIRE(values.has_value());
     REQUIRE(values->size() == 3);
     REQUIRE(std::abs((*values)[0] + 2.0) <= 1e-12);
@@ -118,7 +118,7 @@ TEST_CASE("decomp: eigenvalues of a diagonal matrix") {
 
 TEST_CASE("decomp: eigenvalues of a known symmetric matrix") {
     const lazuli::matrix<double> a{{2.0, 1.0, 0.0}, {1.0, 2.0, 0.0}, {0.0, 0.0, 3.0}};
-    const auto values = lazuli::eigenvalues(a);
+    const auto values = lazuli::nt::eigenvalues(a);
     REQUIRE(values.has_value());
     REQUIRE(std::abs((*values)[0] - 1.0) <= 1e-12);
     REQUIRE(std::abs((*values)[1] - 3.0) <= 1e-12);
@@ -132,7 +132,7 @@ TEST_CASE("decomp: eigenvalues agree with the trace and the Frobenius norm") {
         a(index, index) += 3.0;
     }
 
-    const auto values = lazuli::eigenvalues(a);
+    const auto values = lazuli::nt::eigenvalues(a);
     REQUIRE(values.has_value());
 
     double trace = 0.0;
@@ -155,21 +155,21 @@ TEST_CASE("decomp: eigenvalues agree with the trace and the Frobenius norm") {
 
 TEST_CASE("decomp: eigenvalues reject an asymmetric matrix") {
     const lazuli::matrix<double> asymmetric{{1.0, 2.0}, {0.0, 1.0}};
-    const auto values = lazuli::eigenvalues(asymmetric);
+    const auto values = lazuli::nt::eigenvalues(asymmetric);
     REQUIRE(!values.has_value());
     REQUIRE(values.error().code == lazuli::error_code::not_symmetric);
 }
 
 TEST_CASE("decomp: eigenvalues reject a non-square matrix") {
     const lazuli::matrix<double> wide(2, 3);
-    const auto values = lazuli::eigenvalues(wide);
+    const auto values = lazuli::nt::eigenvalues(wide);
     REQUIRE(!values.has_value());
     REQUIRE(values.error().code == lazuli::error_code::not_square);
 }
 
 TEST_CASE("decomp: QR and eigenvalues work in float") {
     const auto a = lazuli::matrix<float>::random(20, 20, 61, {-1.0F, 1.0F});
-    const auto factors = lazuli::qr(a);
+    const auto factors = lazuli::nt::qr(a);
     REQUIRE(factors.has_value());
     float worst = 0.0F;
     const lazuli::matrix<float> product = factors->q * factors->r;
@@ -181,7 +181,7 @@ TEST_CASE("decomp: QR and eigenvalues work in float") {
     REQUIRE(worst <= 1e-4F);
 
     lazuli::matrix<float> symmetric = a + a.transpose();
-    const auto values = lazuli::eigenvalues(symmetric);
+    const auto values = lazuli::nt::eigenvalues(symmetric);
     REQUIRE(values.has_value());
     REQUIRE(values->size() == 20);
 }

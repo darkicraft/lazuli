@@ -18,15 +18,11 @@ int main() {
         spd(index, index) += 8.0;
     }
 
-    const auto lower = lazuli::cholesky(spd);
-    if (!lower) {
-        std::printf("cholesky failed: %s\n", lower.error().message.c_str());
-        return 1;
-    }
-    std::printf("L[0,0] = %.4f, L[7,7] = %.4f\n", (*lower)(0, 0), (*lower)(7, 7));
+    const lazuli::matrix<double> lower = lazuli::cholesky(spd);
+    std::printf("L[0,0] = %.4f, L[7,7] = %.4f\n", lower(0, 0), lower(7, 7));
 
     // L L^T must rebuild the matrix.
-    const lazuli::matrix<double> rebuilt = (*lower) * lower->transpose();
+    const lazuli::matrix<double> rebuilt = lower * lower.transpose();
     double worst = 0.0;
     for (std::size_t row = 0; row < 8; ++row) {
         for (std::size_t column = 0; column < 8; ++column) {
@@ -35,10 +31,15 @@ int main() {
     }
     std::printf("max |L L^T - A|: %.3e\n", worst);
 
-    // A matrix that is not positive definite is an error value, not an exception.
+    // A matrix that is not positive definite throws by default, and comes back
+    // as a value through the no-throw facade.
     const lazuli::matrix<double> indefinite{{1.0, 2.0}, {2.0, 1.0}};
-    const auto failed = lazuli::cholesky(indefinite);
-    std::printf("indefinite: %s\n",
-                failed ? "unexpectedly succeeded" : failed.error().message.c_str());
+    try {
+        (void)lazuli::cholesky(indefinite);
+    } catch (const lazuli::not_positive_definite& failure) {
+        std::printf("throws: %s\n", failure.what());
+    }
+    const auto failed = lazuli::nt::cholesky(indefinite);
+    std::printf("nt: %s\n", failed ? "unexpectedly succeeded" : failed.error().message.c_str());
     return 0;
 }

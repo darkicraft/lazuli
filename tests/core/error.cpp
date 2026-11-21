@@ -84,6 +84,41 @@ TEST_CASE("error: out of bounds type") {
     REQUIRE(std::string_view{base.what()} == std::string_view{"index 9"});
     REQUIRE_THROWS_AS(throw failure, std::logic_error);
 }
+
+TEST_CASE("error: the remaining failure types keep the standard bases") {
+    const lazuli::not_square square{"2 x 3"};
+    REQUIRE(std::string_view{square.what()} == std::string_view{"2 x 3"});
+    REQUIRE_THROWS_AS(throw square, std::invalid_argument);
+
+    const lazuli::not_symmetric asymmetric{"not symmetric"};
+    REQUIRE_THROWS_AS(throw asymmetric, std::invalid_argument);
+
+    const lazuli::not_converged sweeps{"no convergence"};
+    REQUIRE_THROWS_AS(throw sweeps, std::runtime_error);
+
+    const lazuli::io_error file{"bad header"};
+    REQUIRE(std::string_view{file.what()} == std::string_view{"bad header"});
+    REQUIRE_THROWS_AS(throw file, std::runtime_error);
+}
+
+TEST_CASE("error: fail maps every code to its exception") {
+    using lazuli::error_code;
+    const auto failure = [](error_code code) { return lazuli::error{code, "mapped"}; };
+
+    REQUIRE_THROWS_AS(lazuli::detail::fail(failure(error_code::dimension_mismatch)),
+                      lazuli::dimension_mismatch);
+    REQUIRE_THROWS_AS(lazuli::detail::fail(failure(error_code::not_square)), lazuli::not_square);
+    REQUIRE_THROWS_AS(lazuli::detail::fail(failure(error_code::not_symmetric)),
+                      lazuli::not_symmetric);
+    REQUIRE_THROWS_AS(lazuli::detail::fail(failure(error_code::singular)), lazuli::singular_matrix);
+    REQUIRE_THROWS_AS(lazuli::detail::fail(failure(error_code::not_positive_definite)),
+                      lazuli::not_positive_definite);
+    REQUIRE_THROWS_AS(lazuli::detail::fail(failure(error_code::not_converged)),
+                      lazuli::not_converged);
+    REQUIRE_THROWS_AS(lazuli::detail::fail(failure(error_code::io_parse_error)), lazuli::io_error);
+    REQUIRE_THROWS_AS(lazuli::detail::fail(failure(error_code::out_of_bounds)),
+                      lazuli::out_of_bounds);
+}
 TEST_CASE("error: fail_dimension_mismatch") {
     REQUIRE_THROWS_WITH(lazuli::detail::fail_dimension_mismatch("shapes disagree"),
                         Catch::Matchers::ContainsSubstring("shapes disagree"));
