@@ -34,7 +34,8 @@ cmake --build build --target matrix_basic
 
 - **`matrix/basic`** — the three constructors (zero-filled, initialiser list,
   `uninitialized`), unchecked `operator()` against checked `at()`, deep copies,
-  and the row-major strides.
+  the row-major strides, `identity`, `norm`, `approx_equal`, and `std::format`
+  in compact, one-row-per-line and precision forms.
 - **`matrix/views`** — `block`, `row`, `col`, `transpose` and the implicit
   conversion to a `matrix_view`, all as windows that write back to the original.
 - **`matrix/random`** — reproducible `random(rows, cols, seed, bounds)`, `fill` with a value
@@ -44,7 +45,8 @@ cmake --build build --target matrix_basic
 - **`expr/basic`** — lazy expressions: a fused elementwise chain, a product that writes straight
   into the destination, a product inside a larger expression, `noalias()`, `eval()`, a transposed
   operand, and a matrix-vector product.
-- **`linalg/basic`** — `lu` with partial pivoting, `solve`, `det`, `inverse`, `cholesky`,
+- **`decomp/lu`, `decomp/solve`, `decomp/cholesky`, `decomp/qr`, `decomp/eigen`** — `lu` with
+  partial pivoting, the in-place factorisation, `solve`, `det`, `inverse`, `cholesky`,
   Householder `qr`, `eigenvalues`, and the error value a singular matrix produces.
 - **`expr/threads`** — per-call thread control with `lazuli::options`: the default, one thread,
   four threads, and the same arithmetic under each.

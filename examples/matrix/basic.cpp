@@ -61,8 +61,13 @@ int main() {
     std::printf("identity approx_equal values: %s\n",
                 identity.approx_equal(values, 0.0) ? "yes" : "no");
 
-    // std::format works without a stream manipulator in sight.
-    std::printf("formatted: %s\n", std::format("{}", values).c_str());
+    // std::format works without a stream manipulator in sight. The default is
+    // compact; `#` puts one row per line and the rest of the spec is handed to
+    // the scalar formatter.
+    std::printf("compact:   %s\n", std::format("{}", values).c_str());
+    std::printf("one row:\n%s\n", std::format("{:#}", values).c_str());
+    std::printf("precision: %s\n", std::format("{:.1f}", values).c_str());
+    std::printf("empty:     %s\n", std::format("{}", lazuli::matrix<double>(0, 3)).c_str());
 
     // Storage is row-major and contiguous, so the strides are plain numbers.
     std::printf("row stride %zu, column stride %zu, %zu elements\n",
