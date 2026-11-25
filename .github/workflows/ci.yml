@@ -44,15 +44,19 @@ jobs:
         include:
           - compiler: gcc
             cxx: g++-14
+            cxx_flags: ""
             build_type: Debug
           - compiler: gcc
             cxx: g++-14
+            cxx_flags: ""
             build_type: Release
           - compiler: clang
             cxx: clang++-18
+            cxx_flags: --gcc-toolchain=/usr
             build_type: Debug
           - compiler: clang
             cxx: clang++-18
+            cxx_flags: --gcc-toolchain=/usr
             build_type: Release
     steps:
       - uses: actions/checkout@v4
@@ -74,11 +78,19 @@ jobs:
           path: .deps
           key: catch2-${{ runner.os }}-${{ hashFiles('tests/CMakeLists.txt') }}
           restore-keys: catch2-${{ runner.os }}-
+      - name: Check the Clang C++ runtime
+        if: matrix.compiler == 'clang'
+        run: |
+          clang++-18 --gcc-toolchain=/usr -v -E -x c++ /dev/null 2>&1 \
+            | grep -E 'Selected GCC|include/c\+\+' | head -6
+          printf '#include <expected>\n#include <format>\nint main() {}\n' \
+            | clang++-18 --gcc-toolchain=/usr -std=c++23 -x c++ - -o /dev/null
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_CXX_FLAGS="${{ matrix.cxx_flags }}" \
             -DLAZULI_WARNINGS_AS_ERRORS=ON
       - name: Build
         run: cmake --build build
@@ -110,12 +122,18 @@ jobs:
           path: .deps
           key: catch2-${{ runner.os }}-${{ hashFiles('tests/CMakeLists.txt') }}
           restore-keys: catch2-${{ runner.os }}-
+      - name: Check the Clang C++ runtime
+        run: |
+          clang++-18 --gcc-toolchain=/usr -v -E -x c++ /dev/null 2>&1 \
+            | grep -E 'Selected GCC|include/c\+\+' | head -6
+          printf '#include <expected>\n#include <format>\nint main() {}\n' \
+            | clang++-18 --gcc-toolchain=/usr -std=c++23 -x c++ - -o /dev/null
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_CXX_COMPILER=clang++-18 \
-            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
+            -DCMAKE_CXX_FLAGS="--gcc-toolchain=/usr -fsanitize=address,undefined -fno-omit-frame-pointer" \
             -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
             -DLAZULI_WARNINGS_AS_ERRORS=ON
       - name: Build
