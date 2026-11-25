@@ -44,19 +44,15 @@ jobs:
         include:
           - compiler: gcc
             cxx: g++-14
-            cxx_flags: ""
             build_type: Debug
           - compiler: gcc
             cxx: g++-14
-            cxx_flags: ""
             build_type: Release
           - compiler: clang
             cxx: clang++-18
-            cxx_flags: --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/14
             build_type: Debug
           - compiler: clang
             cxx: clang++-18
-            cxx_flags: --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/14
             build_type: Release
     steps:
       - uses: actions/checkout@v4
@@ -83,7 +79,6 @@ jobs:
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
-            -DCMAKE_CXX_FLAGS="${{ matrix.cxx_flags }}" \
             -DLAZULI_WARNINGS_AS_ERRORS=ON
       - name: Build
         run: cmake --build build
@@ -120,7 +115,7 @@ jobs:
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_CXX_COMPILER=clang++-18 \
-            -DCMAKE_CXX_FLAGS="--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/14 -fsanitize=address,undefined -fno-omit-frame-pointer" \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
             -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
             -DLAZULI_WARNINGS_AS_ERRORS=ON
       - name: Build
