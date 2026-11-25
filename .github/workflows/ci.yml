@@ -1,0 +1,194 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CMAKE_BUILD_PARALLEL_LEVEL: 4
+  CTEST_PARALLEL_LEVEL: 4
+
+jobs:
+  format:
+    name: format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install clang-format
+        run: pip install clang-format==23.1.1
+      - name: Check formatting
+        run: |
+          clang-format --version
+          git ls-files -z '*.cpp' '*.hpp' | xargs -0 clang-format --dry-run --Werror
+
+  build:
+    name: ${{ matrix.compiler }}-${{ matrix.build_type }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: gcc
+            cxx: g++-14
+            cxx_flags: ""
+            build_type: Debug
+          - compiler: gcc
+            cxx: g++-14
+            cxx_flags: ""
+            build_type: Release
+          - compiler: clang
+            cxx: clang++-18
+            cxx_flags: --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/14
+            build_type: Debug
+          - compiler: clang
+            cxx: clang++-18
+            cxx_flags: --gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/14
+            build_type: Release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build python3-venv g++-14
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            sudo apt-get install -y --no-install-recommends clang-18 libomp-18-dev
+          fi
+      - name: Install CMake
+        run: |
+          python3 -m venv "$HOME/.cmake-venv"
+          "$HOME/.cmake-venv/bin/pip" install --quiet "cmake>=3.30"
+          echo "$HOME/.cmake-venv/bin" >> "$GITHUB_PATH"
+      - name: Cache Catch2
+        uses: actions/cache@v4
+        with:
+          path: .deps
+          key: catch2-${{ runner.os }}-${{ hashFiles('tests/CMakeLists.txt') }}
+          restore-keys: catch2-${{ runner.os }}-
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_CXX_FLAGS="${{ matrix.cxx_flags }}" \
+            -DLAZULI_WARNINGS_AS_ERRORS=ON
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  sanitizers:
+    name: asan-ubsan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build python3-venv g++-14 clang-18 libomp-18-dev
+      - name: Install CMake
+        run: |
+          python3 -m venv "$HOME/.cmake-venv"
+          "$HOME/.cmake-venv/bin/pip" install --quiet "cmake>=3.30"
+          echo "$HOME/.cmake-venv/bin" >> "$GITHUB_PATH"
+      - name: Cache Catch2
+        uses: actions/cache@v4
+        with:
+          path: .deps
+          key: catch2-${{ runner.os }}-${{ hashFiles('tests/CMakeLists.txt') }}
+          restore-keys: catch2-${{ runner.os }}-
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_CXX_COMPILER=clang++-18 \
+            -DCMAKE_CXX_FLAGS="--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/14 -fsanitize=address,undefined -fno-omit-frame-pointer" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
+            -DLAZULI_WARNINGS_AS_ERRORS=ON
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  no-exceptions:
+    name: no-exceptions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ninja-build python3-venv g++-14
+      - name: Install CMake
+        run: |
+          python3 -m venv "$HOME/.cmake-venv"
+          "$HOME/.cmake-venv/bin/pip" install --quiet "cmake>=3.30"
+          echo "$HOME/.cmake-venv/bin" >> "$GITHUB_PATH"
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER=g++-14 \
+            -DCMAKE_CXX_FLAGS=-fno-exceptions \
+            -DLAZULI_BUILD_TESTS=OFF \
+            -DLAZULI_BUILD_EXAMPLES=OFF \
+            -DLAZULI_BUILD_BENCH=OFF \
+            -DLAZULI_WARNINGS_AS_ERRORS=ON
+      - name: Build the library
+        run: cmake --build build
+      - name: The no-throw facade links and runs
+        run: |
+          cat > "$RUNNER_TEMP/nt.cpp" <<'EOF'
+          #include <lazuli/lazuli.hpp>
+
+          #include <cstdio>
+
+          int main() {
+              const lazuli::matrix<double> a{{2.0, 0.0}, {0.0, 3.0}};
+              const auto factors = lazuli::nt::lu(a);
+              if (!factors) {
+                  return 1;
+              }
+              std::printf("nt::lu -> %zu x %zu\n", factors->l.rows(), factors->u.cols());
+              return 0;
+          }
+          EOF
+          g++-14 -std=c++23 -fno-exceptions -Iinclude "$RUNNER_TEMP/nt.cpp" \
+            build/liblazuli.a -fopenmp -o "$RUNNER_TEMP/nt"
+          "$RUNNER_TEMP/nt"
+      - name: The throwing facade is rejected with a pointer to nt
+        run: |
+          cat > "$RUNNER_TEMP/throws.cpp" <<'EOF'
+          #include <lazuli/lazuli.hpp>
+
+          int main() {
+              const lazuli::matrix<double> a(2, 2);
+              (void)lazuli::lu(a);
+          }
+          EOF
+          if g++-14 -std=c++23 -fno-exceptions -Iinclude -c "$RUNNER_TEMP/throws.cpp" \
+            -o "$RUNNER_TEMP/throws.o" 2> "$RUNNER_TEMP/throws.log"; then
+            echo "lazuli::lu must not compile with -fno-exceptions"
+            exit 1
+          fi
+          grep -q "use lazuli::nt::lu instead" "$RUNNER_TEMP/throws.log"
+          echo "diagnostic ok"
