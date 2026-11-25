@@ -28,8 +28,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install clang-format
@@ -48,13 +48,13 @@ jobs:
       matrix:
         build_type: [Debug, Release]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install toolchain
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ninja-build g++-14
       - name: Cache Catch2
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .deps
           key: catch2-${{ runner.os }}-${{ hashFiles('tests/CMakeLists.txt') }}
@@ -78,13 +78,13 @@ jobs:
       ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
       UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install toolchain
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ninja-build g++-14
       - name: Cache Catch2
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .deps
           key: catch2-${{ runner.os }}-${{ hashFiles('tests/CMakeLists.txt') }}
@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install toolchain
         run: |
           sudo apt-get update
