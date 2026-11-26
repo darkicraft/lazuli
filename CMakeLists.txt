@@ -48,11 +48,9 @@ target_include_directories(
 
 lazuli_set_warnings(lazuli)
 
-# Optional: without OpenMP the library still builds and runs, single threaded.
-find_package(OpenMP)
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(lazuli PRIVATE OpenMP::OpenMP_CXX)
-endif()
+# OpenMP is a hard dependency: the kernel always uses it for parallelism.
+find_package(OpenMP REQUIRED)
+target_link_libraries(lazuli PRIVATE OpenMP::OpenMP_CXX)
 
 # The baseline implementation is the tests' yardstick, so it is always built.
 add_subdirectory(bench)
