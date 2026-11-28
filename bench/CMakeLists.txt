@@ -22,7 +22,6 @@ if(LAZULI_BUILD_BENCH)
         operations/matmul.cpp
         operations/openblas.cpp
         operations/threads.cpp
-        operations/verify.cpp
         references/simd/matmul.cpp
         references/simd/lu_cholesky.cpp)
     target_link_libraries(bench PRIVATE lazuli::lazuli lazuli_naive)
