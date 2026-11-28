@@ -1,12 +1,11 @@
-// Times the frozen baseline matrix multiplication.
+// Times the naive matmul reference or the library kernel.
 //
-//   cmake --build build --target bench_time_matmul
-//   ./build/bench/time_matmul a.lzm b.lzm --reps 5 [--kernel] [--output c.lzm]
+//   cmake --build build --target bench_validate_matmul
+//   ./build/bench/tools/validate_matmul a.lzm b.lzm --reps 5 [--kernel] [--output c.lzm]
 //
 // Operands come from files on purpose: nothing on the timed path may be visible to the compiler
 // as a constant.
 
-#include <baseline/matmul.hpp>
 #include <lazuli/kernel/matmul.hpp>
 #include <lazuli/lazuli.hpp>
 
@@ -15,6 +14,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <references/naive/matmul.hpp>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -22,7 +22,7 @@
 namespace {
 
 constexpr std::string_view usage =
-    "usage: time_matmul <a.lzm> <b.lzm> [--reps N] [--kernel] [--output C.lzm]\n";
+    "usage: validate_matmul <a.lzm> <b.lzm> [--reps N] [--kernel] [--output C.lzm]\n";
 
 [[nodiscard]] bool parse_positive(std::string_view text, int& value) {
     try {
@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
         if (use_kernel) {
             lazuli::detail::kernel::matmul(a, b, out);
         } else {
-            lazuli::bench::baseline::matmul(a, b, out);
+            lazuli::bench::naive::matmul(a, b, out);
         }
         const auto stop = std::chrono::steady_clock::now();
         // The warm-up run is discarded: this laptop throttles, and a cold run is not the same
@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
     const double gflops = operations / median / 1e9;
 
     std::printf("impl=%s size=%zux%zux%zu reps=%d median_ms=%.3f gflops=%.3f checksum=%.9e\n",
-                use_kernel ? "kernel" : "baseline",
+                use_kernel ? "kernel" : "naive",
                 a.rows(),
                 a.cols(),
                 b.cols(),

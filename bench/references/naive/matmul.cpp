@@ -1,9 +1,9 @@
-#include <baseline/matmul.hpp>
 #include <lazuli/matrix/view.hpp>
 
 #include <cstddef>
+#include <references/naive/matmul.hpp>
 
-namespace lazuli::bench::baseline {
+namespace lazuli::bench::naive {
 
 void matmul(const lazuli::detail::matrix_view<const double>& a,
             const lazuli::detail::matrix_view<const double>& b,
@@ -18,4 +18,4 @@ void matmul(const lazuli::detail::matrix_view<const double>& a,
     }
 }
 
-}  // namespace lazuli::bench::baseline
+}  // namespace lazuli::bench::naive

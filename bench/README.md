@@ -1,7 +1,7 @@
 # Benchmarks
 
-One executable with a menu. It times each operation at 256, 512 and 1024, prints the GFLOPS and
-the speedup against the naive stage, and returns to the menu.
+One executable, one menu, one file per operation. It times each operation at 256, 512 and 1024,
+prints GFLOPS and the speedup against the naive stage, and returns to the menu.
 
 ```sh
 cmake --build build/release --target bench
@@ -21,10 +21,31 @@ cmake --build build/release --target bench
 `iterations` controls how many timed repetitions each stage gets; the first run is always
 discarded. The `-O0` naive stage is slow at 1024, so use `1` for a quick look.
 
+## Layout
+
+```text
+bench/
+  main.cpp                  menu and dispatch only
+  operations/               one file per menu entry
+    matmul.cpp              run_matmul
+    lu.cpp                  run_lu
+    cholesky.cpp            run_cholesky
+    threads.cpp             run_threads
+    openblas.cpp            run_openblas
+  references/
+    naive/                  matmul + LU/Cholesky, compiled with -O0
+    simd/                   explicit AVX2/FMA matmul + LU/Cholesky
+    openblas.*              optional OpenBLAS wrapper
+  common/bench.hpp          best_of, gflops, stage-row formatting
+  tools/validate_matmul.cpp file-backed matmul validator
+```
+
+The menu is the benchmark. `tools/validate_matmul.cpp` is not a menu entry; it is the
+file-backed matmul validator used by `tools/validate_matmul.py`.
+
 ## The stages
 
-- **naive** — the frozen baseline for matmul, and hand-written LU/Cholesky. These translation
-  units are compiled with `-O0`.
+- **naive** — the frozen matmul baseline and hand-written LU/Cholesky, compiled with `-O0`.
 - **SIMD** — explicit AVX2/FMA with no packing, blocking or threads.
 - **blocked** — the library kernel/factorisation at one thread.
 - **full** — the library at the default thread count.
@@ -43,10 +64,9 @@ discarded. The `-O0` naive stage is slow at 1024, so use `1` for a quick look.
 | cholesky | 512 | 0.14 | 4.21 | 3.74 | 4.23 | 31.0x | 31.2x |
 | cholesky | 1024 | 0.15 | 4.06 | 4.05 | 7.78 | 26.7x | 51.2x |
 
-The shape is the same as the optimised-baseline run: matmul gains most from blocking and
-threads; LU at 256 loses to parallel overhead; the simple vectorised Cholesky beats the library’s
-blocked path at small sizes because the library pays for its panels and for allocating its
-result. The library’s full version wins at 1024.
+Matmul gains most from blocking and threads. LU at 256 loses to parallel overhead. The simple
+vectorised Cholesky beats the library’s blocked path at small sizes because the library pays for
+its panels and for allocating its result; the library’s full version wins at 1024.
 
 ## Other menu options
 
@@ -54,11 +74,11 @@ result. The library’s full version wins at 1024.
 - **OpenBLAS reference** — if `pkg-config` found OpenBLAS at configure time. One thread and the
   hardware thread count; the numbers are indicative only.
 
-## Baseline and validator
+## Naive reference and validator
 
-`lazuli_baseline` is built whenever tests or benchmarks are enabled, because the tests use it as
-their independent correctness reference. It is compiled with `-O0`.
+`lazuli_naive` is built whenever tests or benchmarks are enabled, because the tests use its
+matmul as their independent correctness reference. It is compiled with `-O0`.
 
-`bench/tools/time_matmul.cpp` builds `build/bench/time_matmul`, the file-based validator used by `tools/validate_matmul.py`; it is not part
-of the menu. It reads two `.lzm` files and writes the result, so the NumPy script can check the
-round-trip.
+`bench/tools/validate_matmul.cpp` builds `build/bench/tools/validate_matmul`. It reads two `.lzm`
+files, runs matmul, and writes the result for the NumPy check in
+`tools/validate_matmul.py`.

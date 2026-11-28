@@ -1,7 +1,7 @@
 #include <cblas.h>
-#include <reference/openblas.hpp>
+#include <references/openblas.hpp>
 
-namespace lazuli::bench::reference {
+namespace lazuli::bench::openblas {
 
 void set_threads(int threads) {
     openblas_set_num_threads(threads);
@@ -59,4 +59,4 @@ void matmul(std::size_t rows,
                 static_cast<blasint>(cols));
 }
 
-}  // namespace lazuli::bench::reference
+}  // namespace lazuli::bench::openblas

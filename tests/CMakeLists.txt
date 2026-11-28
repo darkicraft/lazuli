@@ -44,7 +44,7 @@ add_executable(
 target_link_libraries(
     lazuli_tests
     PRIVATE lazuli::lazuli
-            lazuli_baseline
+            lazuli_naive
             Catch2::Catch2WithMain)
 target_include_directories(lazuli_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 lazuli_set_warnings(lazuli_tests)

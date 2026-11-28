@@ -12,7 +12,7 @@
 
 #include <lazuli/matrix/view.hpp>
 
-namespace lazuli::bench::baseline {
+namespace lazuli::bench::naive {
 
 /// `out = a * b`, with `out` zeroed by the caller.
 ///
@@ -22,4 +22,4 @@ void matmul(const lazuli::detail::matrix_view<const double>& a,
             const lazuli::detail::matrix_view<const double>& b,
             lazuli::detail::matrix_view<double> out);
 
-}  // namespace lazuli::bench::baseline
+}  // namespace lazuli::bench::naive

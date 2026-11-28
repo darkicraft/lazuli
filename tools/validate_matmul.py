@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Validate the baseline matmul against NumPy, and report the baseline.
+"""Validate the naive matmul reference against NumPy.
 
-Generates two random matrices, writes them in lazuli's binary format, runs the benchmark
+Generates two random matrices, writes them in lazuli's binary format, runs the validator
 binary on those files, and compares the result with numpy.matmul. The format is implemented
 here independently of the C++ reader, so a round-trip through both sides is what gets tested.
 
@@ -55,17 +55,17 @@ def main() -> int:
     parser.add_argument("--size", type=int, default=1024)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--reps", type=int, default=5)
-    parser.add_argument("--bench", type=pathlib.Path, default=pathlib.Path("build/bench/time_matmul"))
+    parser.add_argument("--bench", type=pathlib.Path, default=pathlib.Path("build/bench/tools/validate_matmul"))
     parser.add_argument(
         "--kernel",
         action="store_true",
-        help="time the library kernel instead of the frozen baseline",
+        help="time the library kernel instead of the naive reference",
     )
     parser.add_argument("--keep", action="store_true", help="keep the generated files")
     options = parser.parse_args()
 
     if not options.bench.is_file():
-        print(f"benchmark binary not found: {options.bench}", file=sys.stderr)
+        print(f"validator binary not found: {options.bench}", file=sys.stderr)
         return 2
 
     rng = np.random.default_rng(options.seed)
@@ -109,9 +109,9 @@ def main() -> int:
         print(f"kept: {workdir}")
 
     if relative > 1e-12:
-        print("FAIL: baseline disagrees with NumPy", file=sys.stderr)
+        print("FAIL: naive reference disagrees with NumPy", file=sys.stderr)
         return 1
-    print("PASS: baseline agrees with NumPy")
+    print("PASS: naive reference agrees with NumPy")
     return 0
 
 

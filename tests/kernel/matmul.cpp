@@ -1,4 +1,3 @@
-#include <baseline/matmul.hpp>
 #include <lazuli/kernel/matmul.hpp>
 #include <lazuli/lazuli.hpp>
 
@@ -7,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <references/naive/matmul.hpp>
 #include <utility>
 
 namespace {
@@ -15,7 +15,7 @@ using lazuli::detail::kernel::matmul;
 
 lazuli::matrix<double> reference(const lazuli::matrix<double>& a, const lazuli::matrix<double>& b) {
     lazuli::matrix<double> out(a.rows(), b.cols());
-    lazuli::bench::baseline::matmul(a, b, out);
+    lazuli::bench::naive::matmul(a, b, out);
     return out;
 }
 

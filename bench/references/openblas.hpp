@@ -5,7 +5,7 @@
 
 #include <cstddef>
 
-namespace lazuli::bench::reference {
+namespace lazuli::bench::openblas {
 
 /// Sets the OpenBLAS worker count for the calling thread.
 void set_threads(int threads);
@@ -32,4 +32,4 @@ void matmul(std::size_t rows,
             const float* b,
             float* c);
 
-}  // namespace lazuli::bench::reference
+}  // namespace lazuli::bench::openblas
