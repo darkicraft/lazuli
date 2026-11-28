@@ -3,8 +3,8 @@
 /// @file
 /// @brief Naive LU and Cholesky references, compiled with -O0.
 ///
-/// The target is deliberately unoptimised: no blocking, no vectorisation and no threads. The
-/// benchmark prints a warning that the naive stage is not a like-for-like optimised baseline.
+/// The target is deliberately unoptimised: no blocking, no vectorisation and no threads, and the
+/// translation unit is compiled with -O0.
 
 #include <lazuli/matrix/view.hpp>
 

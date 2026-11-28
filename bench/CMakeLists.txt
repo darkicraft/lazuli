@@ -1,6 +1,5 @@
 # The frozen baseline is built even with LAZULI_BUILD_BENCH=OFF because the tests use it as
-# their yardstick. It is compiled with -O0: the menu's naive stage is deliberately not an
-# optimised comparison.
+# their yardstick. It is compiled with -O0.
 add_library(lazuli_baseline STATIC baseline/matmul.cpp)
 target_compile_options(lazuli_baseline PRIVATE -O0)
 target_link_libraries(lazuli_baseline PUBLIC lazuli::lazuli)

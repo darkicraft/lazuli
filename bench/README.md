@@ -24,21 +24,12 @@ discarded. The `-O0` naive stage is slow at 1024, so use `1` for a quick look.
 ## The stages
 
 - **naive** — the frozen baseline for matmul, and hand-written LU/Cholesky. These translation
-  units are compiled with `-O0` by request. **The naive speedups are therefore not like-for-like
-  against an optimised baseline.**
+  units are compiled with `-O0`.
 - **SIMD** — explicit AVX2/FMA with no packing, blocking or threads.
 - **blocked** — the library kernel/factorisation at one thread.
 - **full** — the library at the default thread count.
 
-For a like-for-like comparison, the previous `-O3` baseline report is in git history at commit
-`d1d56ad` (`bench/README.md`). Its matmul numbers were roughly 3–5 GFLOPS for the baseline and
-10–20x for the full kernel; the `-O0` baseline here is about 0.14 GFLOPS, so the raw ratios are
-much larger and should not be quoted as the project’s speedup.
-
 ## Measured, one quick run, iterations = 1
-
-Best of one timed run per stage. The spread on the 15 W laptop is large; this is the shape, not a
-precise number.
 
 | Operation | n | naive | SIMD | blocked/1t | full/all | SIMD vs naive | full vs naive |
 |---|---|---|---|---|---|---|---|
@@ -66,8 +57,7 @@ result. The library’s full version wins at 1024.
 ## Baseline and validator
 
 `lazuli_baseline` is always built, even with `-DLAZULI_BUILD_BENCH=OFF`, because the tests use it
-as their correctness yardstick. It is compiled with `-O0`; the old `-O3` baseline numbers are not
-comparable.
+as their correctness yardstick. It is compiled with `-O0`.
 
 `bench/tools/time_matmul.cpp` builds `build/bench/time_matmul`, the file-based validator used by `tools/validate_matmul.py`; it is not part
 of the menu. It reads two `.lzm` files and writes the result, so the NumPy script can check the

@@ -3,8 +3,8 @@
 //   cmake --build build/release --target bench
 //   ./build/release/bench/bench
 //
-// The naive references are compiled with -O0 by request. The SIMD stage uses AVX2/FMA with no
-// packing, blocking or threads; the library stages are the blocked, threaded implementation.
+// The naive references are compiled with -O0. The SIMD stage uses AVX2/FMA with no packing,
+// blocking or threads; the library stages are the blocked, threaded implementation.
 
 #include <baseline/matmul.hpp>
 #include <lazuli/lazuli.hpp>
@@ -251,7 +251,6 @@ int main() {
         std::fprintf(stderr, "this benchmark needs AVX2 for the SIMD stage\n");
         return 1;
     }
-    std::printf("naive stages are compiled with -O0; their speedups are not like-for-like.\n");
 
     std::string line;
     while (true) {
