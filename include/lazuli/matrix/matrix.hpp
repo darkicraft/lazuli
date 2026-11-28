@@ -130,48 +130,67 @@ class matrix {
     [[nodiscard]] constexpr std::size_t col_stride() const noexcept { return 1; }
 
     /// Throws when the indices are out of range.
-    [[nodiscard]] decltype(auto) at(this auto&& self, std::size_t row, std::size_t col) {
-        if (row >= self.m_rows) {
-            fail_out_of_bounds(row, self.m_rows);
+    [[nodiscard]] T& at(std::size_t row, std::size_t col) {
+        return const_cast<T&>(std::as_const(*this).at(row, col));
+    }
+
+    [[nodiscard]] const T& at(std::size_t row, std::size_t col) const {
+        if (row >= m_rows) {
+            fail_out_of_bounds(row, m_rows);
         }
-        if (col >= self.m_cols) {
-            fail_out_of_bounds(col, self.m_cols);
+        if (col >= m_cols) {
+            fail_out_of_bounds(col, m_cols);
         }
-        return self(row, col);
+        return (*this)(row, col);
     }
 
     /// Unchecked access. The caller guarantees the indices are in range.
-    [[nodiscard]] decltype(auto) operator()(this auto&& self,
-                                            std::size_t row,
-                                            std::size_t col) noexcept {
-        return self.m_buffer.data()[row * self.m_cols + col];
+    [[nodiscard]] T& operator()(std::size_t row, std::size_t col) noexcept {
+        return const_cast<T&>(std::as_const(*this)(row, col));
     }
 
-    [[nodiscard]] decltype(auto) data(this auto&& self) noexcept { return self.m_buffer.data(); }
-
-    [[nodiscard]] auto view(this auto&& self) noexcept {
-        using element = std::
-            conditional_t<std::is_const_v<std::remove_reference_t<decltype(self)>>, const T, T>;
-        return matrix_view<element>{self.data(), self.m_rows, self.m_cols, self.m_cols, 1};
+    [[nodiscard]] const T& operator()(std::size_t row, std::size_t col) const noexcept {
+        return m_buffer.data()[row * m_cols + col];
     }
 
-    template <typename Self>
-    operator matrix_view<
-        std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const T, T>>(
-        this Self&& self) noexcept {
-        return self.view();
+    [[nodiscard]] T* data() noexcept { return const_cast<T*>(std::as_const(*this).data()); }
+
+    [[nodiscard]] const T* data() const noexcept { return m_buffer.data(); }
+
+    [[nodiscard]] matrix_view<T> view() noexcept {
+        return matrix_view<T>{data(), m_rows, m_cols, m_cols, 1};
     }
 
-    [[nodiscard]] auto block(
-        this auto&& self, std::size_t row, std::size_t col, std::size_t rows, std::size_t cols) {
-        return self.view().block(row, col, rows, cols);
+    [[nodiscard]] matrix_view<const T> view() const noexcept {
+        return matrix_view<const T>{data(), m_rows, m_cols, m_cols, 1};
     }
 
-    [[nodiscard]] auto row(this auto&& self, std::size_t index) { return self.view().row(index); }
+    operator matrix_view<T>() noexcept { return view(); }
 
-    [[nodiscard]] auto col(this auto&& self, std::size_t index) { return self.view().col(index); }
+    operator matrix_view<const T>() const noexcept { return view(); }
 
-    [[nodiscard]] auto transpose(this auto&& self) noexcept { return self.view().transpose(); }
+    [[nodiscard]] auto block(std::size_t row, std::size_t col, std::size_t rows, std::size_t cols) {
+        return view().block(row, col, rows, cols);
+    }
+
+    [[nodiscard]] auto block(std::size_t row,
+                             std::size_t col,
+                             std::size_t rows,
+                             std::size_t cols) const {
+        return view().block(row, col, rows, cols);
+    }
+
+    [[nodiscard]] auto row(std::size_t index) { return view().row(index); }
+
+    [[nodiscard]] auto row(std::size_t index) const { return view().row(index); }
+
+    [[nodiscard]] auto col(std::size_t index) { return view().col(index); }
+
+    [[nodiscard]] auto col(std::size_t index) const { return view().col(index); }
+
+    [[nodiscard]] auto transpose() noexcept { return view().transpose(); }
+
+    [[nodiscard]] auto transpose() const noexcept { return view().transpose(); }
 
     /// Whether this matrix shares storage with `grid`.
     template <typename E>

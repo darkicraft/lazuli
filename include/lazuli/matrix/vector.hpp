@@ -83,30 +83,43 @@ class vector {
     [[nodiscard]] std::size_t size() const noexcept { return m_buffer.size(); }
     [[nodiscard]] bool empty() const noexcept { return m_buffer.size() == 0; }
 
-    [[nodiscard]] decltype(auto) data(this auto&& self) noexcept { return self.m_buffer.data(); }
+    [[nodiscard]] T* data() noexcept { return const_cast<T*>(std::as_const(*this).data()); }
 
-    [[nodiscard]] decltype(auto) operator[](this auto&& self, std::size_t index) noexcept {
-        return self.m_buffer.data()[index];
+    [[nodiscard]] const T* data() const noexcept { return m_buffer.data(); }
+
+    [[nodiscard]] T& operator[](std::size_t index) noexcept {
+        return const_cast<T&>(std::as_const(*this)[index]);
+    }
+
+    [[nodiscard]] const T& operator[](std::size_t index) const noexcept {
+        return m_buffer.data()[index];
     }
 
     /// Throws when the index is out of range.
-    [[nodiscard]] decltype(auto) at(this auto&& self, std::size_t index) {
-        if (index >= self.size()) {
-            fail_out_of_bounds(index, self.size());
-        }
-        return self[index];
+    [[nodiscard]] T& at(std::size_t index) {
+        return const_cast<T&>(std::as_const(*this).at(index));
     }
 
-    [[nodiscard]] auto begin(this auto&& self) noexcept { return self.data(); }
-    [[nodiscard]] auto end(this auto&& self) noexcept { return self.data() + self.size(); }
+    [[nodiscard]] const T& at(std::size_t index) const {
+        if (index >= size()) {
+            fail_out_of_bounds(index, size());
+        }
+        return (*this)[index];
+    }
+
+    [[nodiscard]] T* begin() noexcept { return data(); }
+    [[nodiscard]] const T* begin() const noexcept { return data(); }
+    [[nodiscard]] T* end() noexcept { return data() + size(); }
+    [[nodiscard]] const T* end() const noexcept { return data() + size(); }
 
     /// View of the vector as a single column, so it can be passed where a
     /// matrix view is expected.
-    [[nodiscard]] auto as_column(this auto&& self) noexcept {
-        using element = std::
-            conditional_t<std::is_const_v<std::remove_reference_t<decltype(self)>>, const T, T>;
-        return matrix_view<element>{
-            self.data(), self.size(), std::size_t{1}, std::size_t{1}, self.size()};
+    [[nodiscard]] matrix_view<T> as_column() noexcept {
+        return matrix_view<T>{data(), size(), std::size_t{1}, std::size_t{1}, size()};
+    }
+
+    [[nodiscard]] matrix_view<const T> as_column() const noexcept {
+        return matrix_view<const T>{data(), size(), std::size_t{1}, std::size_t{1}, size()};
     }
 
     /// Frobenius norm.
