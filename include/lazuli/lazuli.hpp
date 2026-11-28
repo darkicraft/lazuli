@@ -34,6 +34,10 @@ using detail::expected;
 /// The error half of an `expected`.
 using detail::unexpected;
 
+/// Tag for constructing an error result in place.
+using detail::unexpect;
+using detail::unexpect_t;
+
 /// Thrown by `expected::value()` when it holds an error.
 using detail::bad_expected_access;
 
