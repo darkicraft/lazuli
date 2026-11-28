@@ -40,9 +40,9 @@ inline constexpr std::size_t panel_width = 64;
 /// applied to the parts of the row outside the panel, because a permutation touches the whole
 /// row, and the trailing block is updated with the matmul kernel in one subtraction pass.
 template <scalar T>
-[[nodiscard]] std::expected<std::size_t, error> lu_factor(matrix_view<T> work,
-                                                          std::vector<std::size_t>& pivots,
-                                                          options settings) {
+[[nodiscard]] expected<std::size_t, error> lu_factor(matrix_view<T> work,
+                                                     std::vector<std::size_t>& pivots,
+                                                     options settings) {
     const std::size_t n = work.rows();
     std::size_t swaps = 0;
 
@@ -76,7 +76,7 @@ template <scalar T>
                 }
             }
             if (largest == T{}) {
-                return std::unexpected{make_error(error_code::singular, "zero pivot")};
+                return unexpected{make_error(error_code::singular, "zero pivot")};
             }
 
             if (pivot != column) {
@@ -143,9 +143,9 @@ template <scalar T>
 }
 
 template <scalar T>
-[[nodiscard]] std::expected<lu_result<T>, error> lu_impl(const matrix<T>& a, options settings) {
+[[nodiscard]] expected<lu_result<T>, error> lu_impl(const matrix<T>& a, options settings) {
     if (a.rows() != a.cols()) {
-        return std::unexpected{make_error(error_code::not_square, "LU needs a square matrix")};
+        return unexpected{make_error(error_code::not_square, "LU needs a square matrix")};
     }
     const std::size_t n = a.rows();
 
@@ -157,7 +157,7 @@ template <scalar T>
 
     auto swaps = lu_factor<T>(work.view(), pivots, settings);
     if (!swaps) {
-        return std::unexpected{swaps.error()};
+        return unexpected{swaps.error()};
     }
 
     lu_result<T> result;
@@ -223,16 +223,16 @@ template <scalar T>
 }
 
 template <scalar T>
-[[nodiscard]] std::expected<vector<T>, error> solve_impl(const matrix<T>& a,
-                                                         const vector<T>& b,
-                                                         options settings) {
+[[nodiscard]] expected<vector<T>, error> solve_impl(const matrix<T>& a,
+                                                    const vector<T>& b,
+                                                    options settings) {
     if (b.size() != a.rows()) {
-        return std::unexpected{
+        return unexpected{
             make_error(error_code::dimension_mismatch, "right-hand side has the wrong length")};
     }
     auto factors = lu_impl(a, settings);
     if (!factors) {
-        return std::unexpected{factors.error()};
+        return unexpected{factors.error()};
     }
 
     matrix<T> rhs(b.size(), 1);
@@ -249,13 +249,13 @@ template <scalar T>
 }
 
 template <scalar T>
-[[nodiscard]] std::expected<matrix<T>, error> inverse_impl(const matrix<T>& a, options settings) {
+[[nodiscard]] expected<matrix<T>, error> inverse_impl(const matrix<T>& a, options settings) {
     if (a.rows() != a.cols()) {
-        return std::unexpected{make_error(error_code::not_square, "inverse needs a square matrix")};
+        return unexpected{make_error(error_code::not_square, "inverse needs a square matrix")};
     }
     auto factors = lu_impl(a, settings);
     if (!factors) {
-        return std::unexpected{factors.error()};
+        return unexpected{factors.error()};
     }
 
     const std::size_t n = a.rows();
@@ -283,10 +283,9 @@ template <scalar T>
 }
 
 template <scalar T>
-[[nodiscard]] std::expected<matrix<T>, error> cholesky_impl(const matrix<T>& a, options settings) {
+[[nodiscard]] expected<matrix<T>, error> cholesky_impl(const matrix<T>& a, options settings) {
     if (a.rows() != a.cols()) {
-        return std::unexpected{
-            make_error(error_code::not_square, "Cholesky needs a square matrix")};
+        return unexpected{make_error(error_code::not_square, "Cholesky needs a square matrix")};
     }
     const std::size_t n = a.rows();
 
@@ -299,8 +298,8 @@ template <scalar T>
             const T right = a(column, row);
             const T scale_value = std::max(std::abs(left), std::abs(right)) + T{1};
             if (std::abs(left - right) > tolerance * scale_value) {
-                return std::unexpected{make_error(error_code::not_positive_definite,
-                                                  "Cholesky needs a symmetric matrix")};
+                return unexpected{make_error(error_code::not_positive_definite,
+                                             "Cholesky needs a symmetric matrix")};
             }
         }
     }
@@ -316,8 +315,8 @@ template <scalar T>
                 diagonal -= work(k + column, k + inner) * work(k + column, k + inner);
             }
             if (diagonal <= T{}) {
-                return std::unexpected{make_error(error_code::not_positive_definite,
-                                                  "matrix is not positive definite")};
+                return unexpected{make_error(error_code::not_positive_definite,
+                                             "matrix is not positive definite")};
             }
             const T root = std::sqrt(diagonal);
             work(k + column, k + column) = root;
@@ -366,12 +365,12 @@ template <scalar T>
 }
 
 template <scalar T>
-[[nodiscard]] std::expected<qr_result<T>, error> qr_impl(const matrix<T>& a, options /*settings*/) {
+[[nodiscard]] expected<qr_result<T>, error> qr_impl(const matrix<T>& a, options /*settings*/) {
     const std::size_t m = a.rows();
     const std::size_t n = a.cols();
     if (m < n) {
-        return std::unexpected{make_error(error_code::dimension_mismatch,
-                                          "QR needs at least as many rows as columns")};
+        return unexpected{make_error(error_code::dimension_mismatch,
+                                     "QR needs at least as many rows as columns")};
     }
 
     matrix<T> work = a;
@@ -443,10 +442,9 @@ template <scalar T>
 }
 
 template <scalar T>
-[[nodiscard]] std::expected<vector<T>, error> eigenvalues_impl(const matrix<T>& a) {
+[[nodiscard]] expected<vector<T>, error> eigenvalues_impl(const matrix<T>& a) {
     if (a.rows() != a.cols()) {
-        return std::unexpected{
-            make_error(error_code::not_square, "eigenvalues need a square matrix")};
+        return unexpected{make_error(error_code::not_square, "eigenvalues need a square matrix")};
     }
     const std::size_t n = a.rows();
 
@@ -457,7 +455,7 @@ template <scalar T>
             const T right = a(column, row);
             const T scale_value = std::max(std::abs(left), std::abs(right)) + T{1};
             if (std::abs(left - right) > tolerance * scale_value) {
-                return std::unexpected{
+                return unexpected{
                     make_error(error_code::not_symmetric, "eigenvalues need a symmetric matrix")};
             }
         }
@@ -522,7 +520,7 @@ template <scalar T>
             }
         }
     }
-    return std::unexpected{make_error(error_code::not_converged, "Jacobi sweeps did not converge")};
+    return unexpected{make_error(error_code::not_converged, "Jacobi sweeps did not converge")};
 }
 
 }  // namespace impl

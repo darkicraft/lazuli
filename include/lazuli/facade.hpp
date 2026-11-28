@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-/// The no-throw facade: every fallible operation returns `std::expected`.
+/// The no-throw facade: every fallible operation returns `expected`.
 namespace lazuli::nt {
 
 using detail::decomp::cholesky;

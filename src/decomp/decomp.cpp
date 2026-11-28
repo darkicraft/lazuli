@@ -4,23 +4,23 @@
 
 namespace lazuli::detail::decomp {
 
-std::expected<lu_result<float>, error> lu(const matrix<float>& a, options settings) {
+expected<lu_result<float>, error> lu(const matrix<float>& a, options settings) {
     return impl::lu_impl<float>(a, settings);
 }
 
-std::expected<lu_result<double>, error> lu(const matrix<double>& a, options settings) {
+expected<lu_result<double>, error> lu(const matrix<double>& a, options settings) {
     return impl::lu_impl<double>(a, settings);
 }
 
-std::expected<vector<float>, error> solve(const matrix<float>& a,
-                                          const vector<float>& b,
-                                          options settings) {
+expected<vector<float>, error> solve(const matrix<float>& a,
+                                     const vector<float>& b,
+                                     options settings) {
     return impl::solve_impl<float>(a, b, settings);
 }
 
-std::expected<vector<double>, error> solve(const matrix<double>& a,
-                                           const vector<double>& b,
-                                           options settings) {
+expected<vector<double>, error> solve(const matrix<double>& a,
+                                      const vector<double>& b,
+                                      options settings) {
     return impl::solve_impl<double>(a, b, settings);
 }
 
@@ -31,27 +31,25 @@ double det(const matrix<double>& a) {
     return impl::det_impl<double>(a);
 }
 
-std::expected<matrix<float>, error> inverse(const matrix<float>& a, options settings) {
+expected<matrix<float>, error> inverse(const matrix<float>& a, options settings) {
     return impl::inverse_impl<float>(a, settings);
 }
 
-std::expected<matrix<double>, error> inverse(const matrix<double>& a, options settings) {
+expected<matrix<double>, error> inverse(const matrix<double>& a, options settings) {
     return impl::inverse_impl<double>(a, settings);
 }
 
-std::expected<matrix<float>, error> cholesky(const matrix<float>& a, options settings) {
+expected<matrix<float>, error> cholesky(const matrix<float>& a, options settings) {
     return impl::cholesky_impl<float>(a, settings);
 }
 
-std::expected<matrix<double>, error> cholesky(const matrix<double>& a, options settings) {
+expected<matrix<double>, error> cholesky(const matrix<double>& a, options settings) {
     return impl::cholesky_impl<double>(a, settings);
 }
 
-std::expected<std::vector<std::size_t>, error> lu_in_place(matrix_view<float> work,
-                                                           options settings) {
+expected<std::vector<std::size_t>, error> lu_in_place(matrix_view<float> work, options settings) {
     if (work.rows() != work.cols()) {
-        return std::unexpected{
-            impl::make_error(error_code::not_square, "LU needs a square matrix")};
+        return unexpected{impl::make_error(error_code::not_square, "LU needs a square matrix")};
     }
     std::vector<std::size_t> pivots(work.rows());
     for (std::size_t index = 0; index < work.rows(); ++index) {
@@ -59,16 +57,14 @@ std::expected<std::vector<std::size_t>, error> lu_in_place(matrix_view<float> wo
     }
     const auto swaps = impl::lu_factor<float>(work, pivots, settings);
     if (!swaps) {
-        return std::unexpected{swaps.error()};
+        return unexpected{swaps.error()};
     }
     return pivots;
 }
 
-std::expected<std::vector<std::size_t>, error> lu_in_place(matrix_view<double> work,
-                                                           options settings) {
+expected<std::vector<std::size_t>, error> lu_in_place(matrix_view<double> work, options settings) {
     if (work.rows() != work.cols()) {
-        return std::unexpected{
-            impl::make_error(error_code::not_square, "LU needs a square matrix")};
+        return unexpected{impl::make_error(error_code::not_square, "LU needs a square matrix")};
     }
     std::vector<std::size_t> pivots(work.rows());
     for (std::size_t index = 0; index < work.rows(); ++index) {
@@ -76,24 +72,24 @@ std::expected<std::vector<std::size_t>, error> lu_in_place(matrix_view<double> w
     }
     const auto swaps = impl::lu_factor<double>(work, pivots, settings);
     if (!swaps) {
-        return std::unexpected{swaps.error()};
+        return unexpected{swaps.error()};
     }
     return pivots;
 }
 
-std::expected<qr_result<float>, error> qr(const matrix<float>& a, options settings) {
+expected<qr_result<float>, error> qr(const matrix<float>& a, options settings) {
     return impl::qr_impl<float>(a, settings);
 }
 
-std::expected<qr_result<double>, error> qr(const matrix<double>& a, options settings) {
+expected<qr_result<double>, error> qr(const matrix<double>& a, options settings) {
     return impl::qr_impl<double>(a, settings);
 }
 
-std::expected<vector<float>, error> eigenvalues(const matrix<float>& a) {
+expected<vector<float>, error> eigenvalues(const matrix<float>& a) {
     return impl::eigenvalues_impl<float>(a);
 }
 
-std::expected<vector<double>, error> eigenvalues(const matrix<double>& a) {
+expected<vector<double>, error> eigenvalues(const matrix<double>& a) {
     return impl::eigenvalues_impl<double>(a);
 }
 

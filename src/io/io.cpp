@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <expected>
 #include <filesystem>
 #include <fstream>
 #include <ios>
@@ -49,8 +48,8 @@ struct tag_of<double> {
     return error{error_code::io_parse_error, std::move(message)};
 }
 
-[[nodiscard]] std::unexpected<error> fail(std::string message) {
-    return std::unexpected{make_error(std::move(message))};
+[[nodiscard]] unexpected<error> fail(std::string message) {
+    return unexpected{make_error(std::move(message))};
 }
 
 template <typename U>
@@ -72,7 +71,7 @@ void write_little_endian(std::array<std::byte, header_size>& header,
 }
 
 template <typename T>
-[[nodiscard]] std::expected<matrix<T>, error> load_file(const std::filesystem::path& path) {
+[[nodiscard]] expected<matrix<T>, error> load_file(const std::filesystem::path& path) {
     std::ifstream stream{path, std::ios::binary};
     if (!stream) {
         return fail("cannot open " + describe(path));
@@ -120,8 +119,8 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::expected<void, error> save_file(const std::filesystem::path& path,
-                                                   matrix_view<const T> data) {
+[[nodiscard]] expected<void, error> save_file(const std::filesystem::path& path,
+                                              matrix_view<const T> data) {
     using element = std::remove_const_t<T>;
     std::ofstream stream{path, std::ios::binary | std::ios::trunc};
     if (!stream) {
@@ -161,23 +160,23 @@ template <typename T>
 }  // namespace
 
 template <scalar T>
-std::expected<matrix<T>, error> load(const std::filesystem::path& path) {
+expected<matrix<T>, error> load(const std::filesystem::path& path) {
     return load_file<T>(path);
 }
 
 template <scalar T>
-std::expected<void, error> save(const std::filesystem::path& path, matrix_view<T> data) {
+expected<void, error> save(const std::filesystem::path& path, matrix_view<T> data) {
     return save_file<std::remove_const_t<T>>(path, data);
 }
 
-template std::expected<matrix<float>, error> load<float>(const std::filesystem::path&);
-template std::expected<matrix<double>, error> load<double>(const std::filesystem::path&);
+template expected<matrix<float>, error> load<float>(const std::filesystem::path&);
+template expected<matrix<double>, error> load<double>(const std::filesystem::path&);
 
-template std::expected<void, error> save<float>(const std::filesystem::path&, matrix_view<float>);
-template std::expected<void, error> save<const float>(const std::filesystem::path&,
-                                                      matrix_view<const float>);
-template std::expected<void, error> save<double>(const std::filesystem::path&, matrix_view<double>);
-template std::expected<void, error> save<const double>(const std::filesystem::path&,
-                                                       matrix_view<const double>);
+template expected<void, error> save<float>(const std::filesystem::path&, matrix_view<float>);
+template expected<void, error> save<const float>(const std::filesystem::path&,
+                                                 matrix_view<const float>);
+template expected<void, error> save<double>(const std::filesystem::path&, matrix_view<double>);
+template expected<void, error> save<const double>(const std::filesystem::path&,
+                                                  matrix_view<const double>);
 
 }  // namespace lazuli::detail::io

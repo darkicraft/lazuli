@@ -5,9 +5,10 @@
 ///
 /// This is the only include a user needs. Every type below lives in `lazuli::detail`; this block
 /// is the public surface, and nothing outside it is supported. The algorithms are declared here
-/// in two forms: `lazuli::` throws on failure, `lazuli::nt::` returns `std::expected`.
+/// in two forms: `lazuli::` throws on failure, `lazuli::nt::` returns `expected`.
 
 #include <lazuli/core/error.hpp>
+#include <lazuli/core/expected.hpp>
 #include <lazuli/core/options.hpp>
 #include <lazuli/decomp/decomp.hpp>
 #include <lazuli/expr/expr.hpp>
@@ -24,8 +25,17 @@ namespace lazuli {
 /// Classification of every failure the library reports.
 using detail::error_code;
 
-/// Value form of a failure, used by the `std::expected` facade.
+/// Value form of a failure, used by the `expected` facade.
 using detail::error;
+
+/// A value or an error, used by the `lazuli::nt` facade.
+using detail::expected;
+
+/// The error half of an `expected`.
+using detail::unexpected;
+
+/// Thrown by `expected::value()` when it holds an error.
+using detail::bad_expected_access;
 
 /// Two operands, or a request, disagreed about a size.
 using detail::dimension_mismatch;

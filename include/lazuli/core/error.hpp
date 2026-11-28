@@ -27,7 +27,7 @@ enum class error_code : std::int32_t {
 /// Stable, human readable spelling of a code.
 [[nodiscard]] std::string_view to_string(error_code code) noexcept;
 
-/// Value form of a failure, used by the `std::expected` facade.
+/// Value form of a failure, used by the `expected` facade.
 struct error {
     error_code code = error_code::none;
     std::string message;
