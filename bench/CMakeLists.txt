@@ -21,6 +21,16 @@ if(LAZULI_BUILD_BENCH)
                    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
                    FOLDER "bench")
 
+    add_executable(bench_stages stages.cpp stages/linalg.cpp)
+    target_link_libraries(bench_stages PRIVATE lazuli::lazuli lazuli_baseline)
+    target_include_directories(bench_stages PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    lazuli_set_warnings(bench_stages)
+    set_target_properties(
+        bench_stages
+        PROPERTIES OUTPUT_NAME stages
+                   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
+                   FOLDER "bench")
+
     if(LAZULI_OPENBLAS_FOUND)
         add_executable(bench_openblas_timing openblas_timing.cpp reference/openblas.cpp)
         target_link_libraries(bench_openblas_timing PRIVATE lazuli::lazuli

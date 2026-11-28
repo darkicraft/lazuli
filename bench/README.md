@@ -209,6 +209,56 @@ Medians of five runs (GFLOPS):
 | 512 | 4.14 | 4.44 | 2.48 | 2.60 |
 | 1024 | 6.19 | 6.42 | 3.51 | 4.32 |
 
+## Staged speedup: naive -> SIMD -> blocked -> full
+
+`bench_stages` separates the three mechanisms instead of collapsing them into one number:
+
+- **naive** — the frozen baseline. The compiler is free to auto-vectorise it, so this is not a
+  hand-written scalar loop.
+- **simd** — explicit AVX2/FMA, but no packing, no cache blocking and no threads. For matmul this
+  is a direct i-k-j vector loop; for LU it vectorises the trailing rank-1 update; for Cholesky it
+  vectorises the row dot products.
+- **blocked/1t** — the library kernel/factorisation with one thread.
+- **full/all** — the library with the default thread count.
+
+```sh
+cmake --build build/release --target bench_stages
+./build/release/bench/stages
+./build/release/bench/stages --csv
+```
+
+One run on the 15 W Ryzen 5 PRO 5650U, GCC 16.2, `-O3 -DNDEBUG`, best of three (GFLOPS):
+
+| Operation | n | naive | SIMD | blocked/1t | full/all | SIMD vs naive | full vs naive |
+|---|---|---|---|---|---|---|---|
+| matmul | 256 | 4.05 | 7.94 | 12.38 | 38.61 | 2.0x | 9.5x |
+| matmul | 512 | 4.28 | 6.52 | 14.76 | 46.62 | 1.5x | 10.9x |
+| matmul | 1024 | 2.92 | 4.90 | 17.06 | 47.60 | 1.7x | 16.3x |
+| lu | 256 | 2.05 | 3.53 | 6.85 | 5.24 | 1.7x | 2.6x |
+| lu | 512 | 2.17 | 4.08 | 9.35 | 12.54 | 1.9x | 5.8x |
+| lu | 1024 | 1.85 | 3.70 | 11.72 | 16.38 | 2.0x | 8.8x |
+| cholesky | 256 | 1.62 | 3.98 | 3.29 | 2.85 | 2.5x | 1.8x |
+| cholesky | 512 | 1.30 | 4.65 | 4.28 | 5.07 | 3.6x | 3.9x |
+| cholesky | 1024 | 1.25 | 4.04 | 5.12 | 6.59 | 3.2x | 5.3x |
+
+The explicit SIMD step is deliberately small for matmul: the frozen baseline is already compiled
+with the optimiser's auto-vectoriser, so the measured gap is explicit SIMD versus whatever the
+compiler chose. The large matmul step is blocking plus OpenMP, not the vector width alone.
+
+Two honest conclusions from the table:
+
+- **LU** gains from the vectorised trailing update and then from blocking; at 256 the all-thread
+  stage is slower than one thread, because the matrix is too small to pay for fork/join.
+- **Cholesky** is the exception at small sizes: the simple vectorised dot-product version beats
+  the library's blocked/1-thread path at 256 and 512. The library version pays for its panel
+  structure and for allocating its result, while the bench-only version factors a preallocated
+  copy. At 1024 the library's all-thread stage catches up. This is the same level-2/level-3
+  trade-off described in M5, not a claim that the blocked version is universally faster.
+
+Run-to-run spread on this laptop is large: an earlier run of the same binary gave 9.4x instead of
+16.3x for 1024 matmul, and the M4 best is 80.6 GFLOPS on a quiet machine. Treat the ratios as the
+shape of the gain, not a precise number. `--csv` emits the same rows for plotting.
+
 ## Reference: OpenBLAS
 
 This column answers "how far is this kernel from a mature BLAS?", not "did we beat OpenBLAS?".
