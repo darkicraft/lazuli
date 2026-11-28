@@ -1,7 +1,5 @@
-# GCC is the CI compiler. Clang is supported and built locally with Clang 23, but the
-# Ubuntu 24.04 runner ships Clang 18, whose __cpp_concepts is 201907L; libstdc++ 14 gates
-# <expected> behind __cpp_concepts >= 202002L, so Clang 18 cannot compile this code with the
-# system standard library. A Clang job returns when the runner ships Clang 19 or newer.
+# Test the minimum supported compilers (GCC 13 and Clang 18), the latest available GCC,
+# the sanitizer build, the no-exceptions path, and formatting.
 
 name: ci
 
@@ -40,19 +38,39 @@ jobs:
           git ls-files -z '*.cpp' '*.hpp' | xargs -0 clang-format --dry-run --Werror
 
   build:
-    name: gcc-${{ matrix.build_type }}
+    name: ${{ matrix.name }}-${{ matrix.build_type }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        build_type: [Debug, Release]
+        include:
+          - name: gcc-13
+            cxx: g++-13
+            packages: g++-13
+            build_type: Debug
+          - name: gcc-13
+            cxx: g++-13
+            packages: g++-13
+            build_type: Release
+          - name: gcc-14
+            cxx: g++-14
+            packages: g++-14
+            build_type: Release
+          - name: clang-18
+            cxx: clang++-18
+            packages: clang-18 libomp-18-dev g++-13
+            build_type: Debug
+          - name: clang-18
+            cxx: clang++-18
+            packages: clang-18 libomp-18-dev g++-13
+            build_type: Release
     steps:
       - uses: actions/checkout@v7
       - name: Install toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ninja-build g++-14
+          sudo apt-get install -y --no-install-recommends ninja-build ${{ matrix.packages }}
       - name: Cache Catch2
         uses: actions/cache@v6
         with:
@@ -63,7 +81,7 @@ jobs:
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DCMAKE_CXX_COMPILER=g++-14 \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DLAZULI_WARNINGS_AS_ERRORS=ON
       - name: Build
         run: cmake --build build
@@ -111,12 +129,12 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ninja-build g++-14
+          sudo apt-get install -y --no-install-recommends ninja-build g++-13
       - name: Configure
         run: |
           cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_COMPILER=g++-14 \
+            -DCMAKE_CXX_COMPILER=g++-13 \
             -DCMAKE_CXX_FLAGS=-fno-exceptions \
             -DLAZULI_BUILD_TESTS=OFF \
             -DLAZULI_BUILD_EXAMPLES=OFF \
@@ -141,7 +159,7 @@ jobs:
               return 0;
           }
           EOF
-          g++-14 -std=c++23 -fno-exceptions -Iinclude "$RUNNER_TEMP/nt.cpp" \
+          g++-13 -std=c++20 -fno-exceptions -Iinclude "$RUNNER_TEMP/nt.cpp" \
             build/liblazuli.a -fopenmp -o "$RUNNER_TEMP/nt"
           "$RUNNER_TEMP/nt"
       - name: The throwing facade is rejected with a pointer to nt
@@ -154,7 +172,7 @@ jobs:
               (void)lazuli::lu(a);
           }
           EOF
-          if g++-14 -std=c++23 -fno-exceptions -Iinclude -c "$RUNNER_TEMP/throws.cpp" \
+          if g++-13 -std=c++20 -fno-exceptions -Iinclude -c "$RUNNER_TEMP/throws.cpp" \
             -o "$RUNNER_TEMP/throws.o" 2> "$RUNNER_TEMP/throws.log"; then
             echo "lazuli::lu must not compile with -fno-exceptions"
             exit 1

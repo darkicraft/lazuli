@@ -40,7 +40,7 @@ add_library(
     src/kernel/matmul.cpp)
 add_library(lazuli::lazuli ALIAS lazuli)
 
-target_compile_features(lazuli PUBLIC cxx_std_23)
+target_compile_features(lazuli PUBLIC cxx_std_20)
 target_include_directories(
     lazuli
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -75,7 +75,7 @@ if(LAZULI_BUILD_TESTS)
         add_library(header_check_${slug} OBJECT EXCLUDE_FROM_ALL "${source}")
         target_include_directories(header_check_${slug}
                                    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-        target_compile_features(header_check_${slug} PRIVATE cxx_std_23)
+        target_compile_features(header_check_${slug} PRIVATE cxx_std_20)
         lazuli_set_warnings(header_check_${slug})
         list(APPEND lazuli_header_targets header_check_${slug})
     endforeach()
