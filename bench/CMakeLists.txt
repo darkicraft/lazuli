@@ -1,73 +1,47 @@
-# The frozen baseline is built unconditionally: the tests use it as the
-# yardstick for every optimised kernel that follows.
+# The frozen baseline is built even with LAZULI_BUILD_BENCH=OFF because the tests use it as
+# their yardstick. It is compiled with -O0: the menu's naive stage is deliberately not an
+# optimised comparison.
 add_library(lazuli_baseline STATIC baseline/matmul.cpp)
+target_compile_options(lazuli_baseline PRIVATE -O0)
 target_link_libraries(lazuli_baseline PUBLIC lazuli::lazuli)
 target_include_directories(lazuli_baseline PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 lazuli_set_warnings(lazuli_baseline)
 
 if(LAZULI_BUILD_BENCH)
-    # The reference column is optional: it is report context, not a library dependency.
     find_package(PkgConfig QUIET)
     if(PkgConfig_FOUND)
         pkg_check_modules(LAZULI_OPENBLAS QUIET IMPORTED_TARGET openblas)
     endif()
 
-    add_executable(bench_kernel_timing kernel_timing.cpp)
-    target_link_libraries(bench_kernel_timing PRIVATE lazuli_baseline)
-    lazuli_set_warnings(bench_kernel_timing)
-    set_target_properties(
-        bench_kernel_timing
-        PROPERTIES OUTPUT_NAME kernel_timing
-                   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
-                   FOLDER "bench")
+    # Naive LU and Cholesky, also compiled with -O0.
+    add_library(lazuli_naive STATIC naive/linalg.cpp)
+    target_compile_options(lazuli_naive PRIVATE -O0)
+    target_link_libraries(lazuli_naive PUBLIC lazuli::lazuli)
+    target_include_directories(lazuli_naive PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    lazuli_set_warnings(lazuli_naive)
 
-    add_executable(bench_stages stages.cpp stages/linalg.cpp)
-    target_link_libraries(bench_stages PRIVATE lazuli::lazuli lazuli_baseline)
-    target_include_directories(bench_stages PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-    lazuli_set_warnings(bench_stages)
-    set_target_properties(
-        bench_stages
-        PROPERTIES OUTPUT_NAME stages
-                   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
-                   FOLDER "bench")
-
+    add_executable(bench main.cpp stages/linalg.cpp)
+    target_link_libraries(bench PRIVATE lazuli::lazuli lazuli_baseline lazuli_naive)
+    target_include_directories(bench PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     if(LAZULI_OPENBLAS_FOUND)
-        add_executable(bench_openblas_timing openblas_timing.cpp reference/openblas.cpp)
-        target_link_libraries(bench_openblas_timing PRIVATE lazuli::lazuli
-                                                         PkgConfig::LAZULI_OPENBLAS)
-        target_include_directories(bench_openblas_timing
-                                   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-        lazuli_set_warnings(bench_openblas_timing)
-        set_target_properties(
-            bench_openblas_timing
-            PROPERTIES OUTPUT_NAME openblas_timing
-                       RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
-                       FOLDER "bench")
-        message(STATUS "bench: OpenBLAS ${LAZULI_OPENBLAS_VERSION} reference enabled")
+        target_sources(bench PRIVATE reference/openblas.cpp)
+        target_link_libraries(bench PRIVATE PkgConfig::LAZULI_OPENBLAS)
+        target_compile_definitions(bench PRIVATE LAZULI_HAVE_OPENBLAS=1)
+        message(STATUS "bench: OpenBLAS reference enabled")
     else()
-        message(STATUS "bench: OpenBLAS not found; the reference column is skipped")
+        message(STATUS "bench: OpenBLAS not found; the menu option reports that")
     endif()
-
-    add_executable(bench_thread_sweep thread_sweep.cpp)
-    target_link_libraries(bench_thread_sweep PRIVATE lazuli::lazuli)
-    lazuli_set_warnings(bench_thread_sweep)
+    lazuli_set_warnings(bench)
     set_target_properties(
-        bench_thread_sweep
-        PROPERTIES OUTPUT_NAME thread_sweep
+        bench
+        PROPERTIES OUTPUT_NAME bench
                    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
                    FOLDER "bench")
 
-    add_executable(bench_decomp decomp.cpp)
-    target_link_libraries(bench_decomp PRIVATE lazuli::lazuli)
-    lazuli_set_warnings(bench_decomp)
-    set_target_properties(
-        bench_decomp
-        PROPERTIES OUTPUT_NAME decomp
-                   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench"
-                   FOLDER "bench")
-
-    add_executable(bench_time_matmul time_matmul.cpp)
+    # File-based validator utility, kept for tools/validate_matmul.py. Not part of the menu.
+    add_executable(bench_time_matmul tools/time_matmul.cpp)
     target_link_libraries(bench_time_matmul PRIVATE lazuli_baseline)
+    target_include_directories(bench_time_matmul PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     lazuli_set_warnings(bench_time_matmul)
     set_target_properties(
         bench_time_matmul

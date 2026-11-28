@@ -174,74 +174,13 @@ void matmul_simd(matrix_view<const double> a,
     matmul_scalar(a, b, out);
 }
 
-bool lu_naive(matrix_view<double> a, std::vector<std::size_t>& pivots) {
-    const std::size_t size = a.rows();
-    for (std::size_t index = 0; index < size; ++index) {
-        pivots[index] = index;
-    }
-
-    for (std::size_t step = 0; step < size; ++step) {
-        std::size_t pivot = step;
-        double best = std::abs(a(step, step));
-        for (std::size_t row = step + 1; row < size; ++row) {
-            const double candidate = std::abs(a(row, step));
-            if (candidate > best) {
-                best = candidate;
-                pivot = row;
-            }
-        }
-        if (best == 0.0) {
-            return false;
-        }
-        if (pivot != step) {
-            swap_rows(a, step, pivot);
-            std::swap(pivots[step], pivots[pivot]);
-        }
-
-        const double diagonal = a(step, step);
-        for (std::size_t row = step + 1; row < size; ++row) {
-            a(row, step) /= diagonal;
-        }
-        for (std::size_t row = step + 1; row < size; ++row) {
-            const double factor = a(row, step);
-            for (std::size_t column = step + 1; column < size; ++column) {
-                a(row, column) -= factor * a(step, column);
-            }
-        }
-    }
-    return true;
-}
-
 bool lu_simd(matrix_view<double> a, std::vector<std::size_t>& pivots) {
 #if defined(__x86_64__)
     if (a.col_stride() == 1) {
         return lu_simd_impl(a, pivots);
     }
 #endif
-    return lu_naive(a, pivots);
-}
-
-bool cholesky_naive(matrix_view<double> a) {
-    const std::size_t size = a.rows();
-    for (std::size_t step = 0; step < size; ++step) {
-        double diagonal = a(step, step);
-        for (std::size_t previous = 0; previous < step; ++previous) {
-            diagonal -= a(step, previous) * a(step, previous);
-        }
-        if (diagonal <= 0.0) {
-            return false;
-        }
-        const double pivot = std::sqrt(diagonal);
-        a(step, step) = pivot;
-        for (std::size_t row = step + 1; row < size; ++row) {
-            double sum = a(row, step);
-            for (std::size_t previous = 0; previous < step; ++previous) {
-                sum -= a(row, previous) * a(step, previous);
-            }
-            a(row, step) = sum / pivot;
-        }
-    }
-    return true;
+    return false;
 }
 
 bool cholesky_simd(matrix_view<double> a) {
@@ -250,7 +189,7 @@ bool cholesky_simd(matrix_view<double> a) {
         return cholesky_simd_impl(a);
     }
 #endif
-    return cholesky_naive(a);
+    return false;
 }
 
 }  // namespace lazuli::bench::stages
