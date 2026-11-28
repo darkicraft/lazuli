@@ -72,12 +72,13 @@ void print_full_menu() {
 
 void print_footer() {
     std::printf(
+        "\n"
         "[m]atmul [l]u [c]holesky [t]hreads [o]penblas [a]ll [i]terations "
         "[?]help [q]uit\n");
 }
 
 void print_prompt() {
-    std::printf("bench [%d]> ", repetitions);
+    std::printf("\nbench [%d]> ", repetitions);
     std::fflush(stdout);
 }
 
@@ -90,6 +91,7 @@ int main() {
     }
 
     print_full_menu();
+
     std::string line;
     while (true) {
         print_prompt();
