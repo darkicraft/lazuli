@@ -48,12 +48,16 @@ bench/
     naive/                  matmul + LU/Cholesky, compiled with -O0
     simd/                   explicit AVX2/FMA matmul + LU/Cholesky
     openblas.*              optional OpenBLAS wrapper
-  common/bench.hpp          best_of, gflops, stage-row formatting
+  common/bench.cpp          best_of, gflops, stage-row formatting
   tools/validate_matmul.cpp file-backed matmul validator
 ```
 
 The menu is the benchmark. `tools/validate_matmul.cpp` is not a menu entry; it is the
 file-backed matmul validator used by `tools/validate_matmul.py`.
+
+There are no internal headers: the benchmark is a demo, not a reusable component, so each
+translation unit declares the few helpers it calls. `common/bench.cpp` owns the shared timing
+and formatting functions.
 
 ## The stages
 

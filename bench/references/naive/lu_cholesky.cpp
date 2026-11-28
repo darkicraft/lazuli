@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <cstddef>
-#include <references/naive/lu_cholesky.hpp>
 #include <utility>
 #include <vector>
 

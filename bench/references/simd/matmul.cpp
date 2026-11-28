@@ -1,7 +1,6 @@
 #include <lazuli/matrix/view.hpp>
 
 #include <cstddef>
-#include <references/simd/matmul.hpp>
 
 #if defined(__x86_64__)
 #include <immintrin.h>

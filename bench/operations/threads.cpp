@@ -1,8 +1,17 @@
 #include <lazuli/lazuli.hpp>
 
-#include <common/bench.hpp>
 #include <cstddef>
-#include <operations/threads.hpp>
+#include <functional>
+#include <vector>
+
+namespace lazuli::bench {
+
+extern const std::size_t benchmark_sizes[3];
+double best_of(int count, const std::function<void()>& prepare, const std::function<void()>& work);
+double gflops(double flops, double seconds);
+std::vector<std::size_t> thread_counts();
+
+}  // namespace lazuli::bench
 
 namespace lazuli::bench {
 

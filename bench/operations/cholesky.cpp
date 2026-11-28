@@ -1,10 +1,25 @@
 #include <lazuli/lazuli.hpp>
 
-#include <common/bench.hpp>
 #include <cstddef>
-#include <operations/cholesky.hpp>
-#include <references/naive/lu_cholesky.hpp>
-#include <references/simd/lu_cholesky.hpp>
+#include <functional>
+
+namespace lazuli::bench {
+
+extern const std::size_t benchmark_sizes[3];
+double best_of(int count, const std::function<void()>& prepare, const std::function<void()>& work);
+double gflops(double flops, double seconds);
+void print_stage_header();
+void print_stage_row(std::size_t n, double naive, double simd, double blocked, double full);
+
+namespace naive {
+bool cholesky(lazuli::detail::matrix_view<double> a);
+}
+
+namespace simd {
+bool cholesky(lazuli::detail::matrix_view<double> a);
+}
+
+}  // namespace lazuli::bench
 
 namespace lazuli::bench {
 

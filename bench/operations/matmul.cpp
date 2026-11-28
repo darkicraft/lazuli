@@ -1,10 +1,29 @@
 #include <lazuli/lazuli.hpp>
 
-#include <common/bench.hpp>
 #include <cstddef>
-#include <operations/matmul.hpp>
-#include <references/naive/matmul.hpp>
-#include <references/simd/matmul.hpp>
+#include <functional>
+
+namespace lazuli::bench {
+
+extern const std::size_t benchmark_sizes[3];
+double best_of(int count, const std::function<void()>& prepare, const std::function<void()>& work);
+double gflops(double flops, double seconds);
+void print_stage_header();
+void print_stage_row(std::size_t n, double naive, double simd, double blocked, double full);
+
+namespace naive {
+void matmul(const lazuli::detail::matrix_view<const double>& a,
+            const lazuli::detail::matrix_view<const double>& b,
+            lazuli::detail::matrix_view<double> out);
+}
+
+namespace simd {
+void matmul(lazuli::detail::matrix_view<const double> a,
+            lazuli::detail::matrix_view<const double> b,
+            lazuli::detail::matrix_view<double> out);
+}
+
+}  // namespace lazuli::bench
 
 namespace lazuli::bench {
 

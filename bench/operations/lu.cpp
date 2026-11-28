@@ -1,11 +1,26 @@
 #include <lazuli/lazuli.hpp>
 
-#include <common/bench.hpp>
 #include <cstddef>
-#include <operations/lu.hpp>
-#include <references/naive/lu_cholesky.hpp>
-#include <references/simd/lu_cholesky.hpp>
+#include <functional>
 #include <vector>
+
+namespace lazuli::bench {
+
+extern const std::size_t benchmark_sizes[3];
+double best_of(int count, const std::function<void()>& prepare, const std::function<void()>& work);
+double gflops(double flops, double seconds);
+void print_stage_header();
+void print_stage_row(std::size_t n, double naive, double simd, double blocked, double full);
+
+namespace naive {
+bool lu(lazuli::detail::matrix_view<double> a, std::vector<std::size_t>& pivots);
+}
+
+namespace simd {
+bool lu(lazuli::detail::matrix_view<double> a, std::vector<std::size_t>& pivots);
+}
+
+}  // namespace lazuli::bench
 
 namespace lazuli::bench {
 

@@ -1,15 +1,29 @@
 #include <lazuli/lazuli.hpp>
 
-#include <common/bench.hpp>
-#include <operations/openblas.hpp>
-
-#if defined(LAZULI_HAVE_OPENBLAS)
-#include <references/openblas.hpp>
-#endif
-
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <thread>
+
+namespace lazuli::bench {
+
+extern const std::size_t benchmark_sizes[3];
+double best_of(int count, const std::function<void()>& prepare, const std::function<void()>& work);
+double gflops(double flops, double seconds);
+
+#if defined(LAZULI_HAVE_OPENBLAS)
+namespace openblas {
+void set_threads(int threads);
+void matmul(std::size_t rows,
+            std::size_t inner,
+            std::size_t cols,
+            const double* a,
+            const double* b,
+            double* c);
+}  // namespace openblas
+#endif
+
+}  // namespace lazuli::bench
 
 namespace lazuli::bench {
 

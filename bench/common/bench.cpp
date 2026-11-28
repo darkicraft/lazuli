@@ -1,12 +1,13 @@
-#pragma once
-
-/// @file
-/// @brief Shared timing and reporting helpers for the benchmark menu.
+// Shared timing and reporting helpers for the benchmark menu.
+//
+// The benchmark is a demo, not a library, so it has no internal headers. Every
+// other translation unit declares the handful of helpers it uses.
 
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <cstdio>
+#include <functional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -16,12 +17,11 @@ namespace lazuli::bench {
 using clock_type = std::chrono::steady_clock;
 
 /// Sizes used by every operation in the menu.
-inline constexpr std::size_t benchmark_sizes[] = {
+extern const std::size_t benchmark_sizes[3] = {
     std::size_t{256}, std::size_t{512}, std::size_t{1024}};
 
-/// Runs `work` `count + 1` times, discarding the first run and returning the best time.
-template <typename Prepare, typename Work>
-double best_of(int count, Prepare prepare, Work work) {
+/// Runs `prepare` then `work` `count + 1` times, discarding the first run.
+double best_of(int count, const std::function<void()>& prepare, const std::function<void()>& work) {
     double best = 1e9;
     for (int run = 0; run <= count; ++run) {
         prepare();
@@ -35,17 +35,17 @@ double best_of(int count, Prepare prepare, Work work) {
     return best;
 }
 
-inline double gflops(double flops, double seconds) {
+double gflops(double flops, double seconds) {
     return flops / seconds / 1e9;
 }
 
-inline std::size_t hardware_threads() {
+std::size_t hardware_threads() {
     return std::max(1u, std::thread::hardware_concurrency());
 }
 
 /// Powers of two up to the hardware count, half the hardware count when it is at least four,
 /// and the hardware count itself. On 12 hardware threads this is 1, 2, 4, 6, 8, 12.
-inline std::vector<std::size_t> thread_counts() {
+std::vector<std::size_t> thread_counts() {
     const std::size_t hardware = hardware_threads();
     std::vector<std::size_t> counts{1};
     for (std::size_t value = 2; value <= hardware; value *= 2) {
@@ -63,7 +63,7 @@ inline std::vector<std::size_t> thread_counts() {
     return counts;
 }
 
-inline std::string thread_count_label() {
+std::string thread_count_label() {
     std::string label;
     for (const std::size_t count : thread_counts()) {
         if (!label.empty()) {
@@ -74,7 +74,7 @@ inline std::string thread_count_label() {
     return label;
 }
 
-inline void print_stage_header() {
+void print_stage_header() {
     std::printf("  %-5s %9s %9s %10s %11s %10s %11s %10s\n",
                 "n",
                 "naive",
@@ -86,7 +86,7 @@ inline void print_stage_header() {
                 "vs naive");
 }
 
-inline void print_stage_row(std::size_t n, double naive, double simd, double blocked, double full) {
+void print_stage_row(std::size_t n, double naive, double simd, double blocked, double full) {
     std::printf("  %-5zu %9.2f %9.2f %9.1fx %11.2f %9.1fx %11.2f %9.1fx\n",
                 n,
                 naive,

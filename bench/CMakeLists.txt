@@ -17,6 +17,7 @@ if(LAZULI_BUILD_BENCH)
     add_executable(
         bench
         main.cpp
+        common/bench.cpp
         operations/cholesky.cpp
         operations/lu.cpp
         operations/matmul.cpp

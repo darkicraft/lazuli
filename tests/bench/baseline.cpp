@@ -3,7 +3,14 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstddef>
-#include <references/naive/matmul.hpp>
+
+namespace lazuli::bench::naive {
+
+void matmul(const lazuli::detail::matrix_view<const double>& a,
+            const lazuli::detail::matrix_view<const double>& b,
+            lazuli::detail::matrix_view<double> out);
+
+}  // namespace lazuli::bench::naive
 
 namespace {
 

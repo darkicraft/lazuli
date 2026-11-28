@@ -1,7 +1,6 @@
 #include <lazuli/matrix/view.hpp>
 
 #include <cstddef>
-#include <references/naive/matmul.hpp>
 
 namespace lazuli::bench::naive {
 

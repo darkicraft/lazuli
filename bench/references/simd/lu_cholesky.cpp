@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <cstddef>
-#include <references/simd/lu_cholesky.hpp>
 #include <utility>
 #include <vector>
 

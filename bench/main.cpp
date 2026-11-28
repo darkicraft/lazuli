@@ -7,17 +7,27 @@
 // references/. This file only owns the menu and the iteration setting.
 
 #include <cctype>
-#include <common/bench.hpp>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include <operations/cholesky.hpp>
-#include <operations/lu.hpp>
-#include <operations/matmul.hpp>
-#include <operations/openblas.hpp>
-#include <operations/threads.hpp>
-#include <references/simd/matmul.hpp>
 #include <string>
+
+namespace lazuli::bench {
+
+std::size_t hardware_threads();
+std::string thread_count_label();
+void run_cholesky(int repetitions);
+void run_lu(int repetitions);
+void run_matmul(int repetitions);
+void run_openblas(int repetitions);
+void run_threads(int repetitions);
+
+namespace simd {
+bool available() noexcept;
+}
+
+}  // namespace lazuli::bench
 
 namespace {
 

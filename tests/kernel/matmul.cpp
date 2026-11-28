@@ -6,8 +6,15 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <references/naive/matmul.hpp>
 #include <utility>
+
+namespace lazuli::bench::naive {
+
+void matmul(const lazuli::detail::matrix_view<const double>& a,
+            const lazuli::detail::matrix_view<const double>& b,
+            lazuli::detail::matrix_view<double> out);
+
+}  // namespace lazuli::bench::naive
 
 namespace {
 
