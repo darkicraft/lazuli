@@ -12,7 +12,7 @@ cmake --build build/release --target bench
 1) matmul       naive -> SIMD -> blocked -> full
 2) LU           naive -> SIMD -> blocked -> full
 3) Cholesky     naive -> SIMD -> blocked -> full
-4) thread sweep matmul, 1, 2, 3, 4, 6, 8 and 12 threads
+4) thread sweep matmul at the generated thread counts
 5) OpenBLAS reference
 6) iterations   current: 3
 7) exit
@@ -70,7 +70,9 @@ its panels and for allocating its result; the library’s full version wins at 1
 
 ## Other menu options
 
-- **thread sweep** — the kernel at 1, 2, 3, 4, 6, 8 and 12 threads.
+- **thread sweep** — the kernel at powers of two up to the hardware count, half the
+  hardware count when it is at least four, and the full hardware count. On 12 threads that is
+  1, 2, 4, 6, 8, 12; on 64 it is 1, 2, 4, 8, 16, 32, 64.
 - **OpenBLAS reference** — if `pkg-config` found OpenBLAS at configure time. One thread and the
   hardware thread count; the numbers are indicative only.
 

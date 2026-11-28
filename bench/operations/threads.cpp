@@ -11,6 +11,7 @@ using lazuli::detail::options;
 
 void run_threads(int repetitions) {
     std::printf("\nmatmul thread sweep, double, best of %d\n", repetitions);
+    const auto counts = thread_counts();
     for (const std::size_t n : benchmark_sizes) {
         const auto a = matrix<double>::random(n, n, 7, {-1.0, 1.0});
         const auto b = matrix<double>::random(n, n, 8, {-1.0, 1.0});
@@ -18,13 +19,7 @@ void run_threads(int repetitions) {
         const double flops =
             2.0 * static_cast<double>(n) * static_cast<double>(n) * static_cast<double>(n);
         std::printf("  n=%-5zu", n);
-        for (const std::size_t threads : {std::size_t{1},
-                                          std::size_t{2},
-                                          std::size_t{3},
-                                          std::size_t{4},
-                                          std::size_t{6},
-                                          std::size_t{8},
-                                          std::size_t{12}}) {
+        for (const std::size_t threads : counts) {
             const double seconds = best_of(
                 repetitions,
                 [&] { out.fill(0.0); },

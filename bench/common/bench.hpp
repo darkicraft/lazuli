@@ -7,6 +7,9 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdio>
+#include <string>
+#include <thread>
+#include <vector>
 
 namespace lazuli::bench {
 
@@ -34,6 +37,41 @@ double best_of(int count, Prepare prepare, Work work) {
 
 inline double gflops(double flops, double seconds) {
     return flops / seconds / 1e9;
+}
+
+inline std::size_t hardware_threads() {
+    return std::max(1u, std::thread::hardware_concurrency());
+}
+
+/// Powers of two up to the hardware count, half the hardware count when it is at least four,
+/// and the hardware count itself. On 12 hardware threads this is 1, 2, 4, 6, 8, 12.
+inline std::vector<std::size_t> thread_counts() {
+    const std::size_t hardware = hardware_threads();
+    std::vector<std::size_t> counts{1};
+    for (std::size_t value = 2; value <= hardware; value *= 2) {
+        counts.push_back(value);
+    }
+    const std::size_t half = hardware / 2;
+    if (half >= 4) {
+        counts.push_back(half);
+    }
+    if (hardware > 1) {
+        counts.push_back(hardware);
+    }
+    std::sort(counts.begin(), counts.end());
+    counts.erase(std::unique(counts.begin(), counts.end()), counts.end());
+    return counts;
+}
+
+inline std::string thread_count_label() {
+    std::string label;
+    for (const std::size_t count : thread_counts()) {
+        if (!label.empty()) {
+            label += ", ";
+        }
+        label += std::to_string(count);
+    }
+    return label;
 }
 
 inline void print_stage_row(std::size_t n, double naive, double simd, double blocked, double full) {

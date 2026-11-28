@@ -6,6 +6,7 @@
 // Each operation lives in operations/<name>.cpp; the reference implementations live under
 // references/. This file only owns the menu and the iteration setting.
 
+#include <common/bench.hpp>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -38,17 +39,17 @@ void set_iterations() {
 }
 
 void print_menu() {
-    std::printf(
-        "\nlazuli benchmarks\n"
-        "  1) matmul       naive -> SIMD -> blocked -> full\n"
-        "  2) LU           naive -> SIMD -> blocked -> full\n"
-        "  3) Cholesky     naive -> SIMD -> blocked -> full\n"
-        "  4) thread sweep matmul, 1, 2, 3, 4, 6, 8 and 12 threads\n"
-        "  5) OpenBLAS reference\n"
-        "  6) iterations   current: %d\n"
-        "  7) exit\n"
-        "> ",
-        repetitions);
+    const std::string threads = lazuli::bench::thread_count_label();
+    std::printf("\nlazuli benchmark | AVX2 | %zu hardware threads | %d iterations\n",
+                lazuli::bench::hardware_threads(),
+                repetitions);
+    std::printf("  1) matmul       naive -> SIMD -> blocked -> full\n");
+    std::printf("  2) LU           naive -> SIMD -> blocked -> full\n");
+    std::printf("  3) Cholesky     naive -> SIMD -> blocked -> full\n");
+    std::printf("  4) thread sweep matmul at %s threads\n", threads.c_str());
+    std::printf("  5) OpenBLAS reference\n");
+    std::printf("  6) iterations   current: %d\n", repetitions);
+    std::printf("  7) exit\n> ");
     std::fflush(stdout);
 }
 

@@ -1,0 +1,10 @@
+# Project conventions: four-space indentation, eighty columns, snake_case CMake variables and
+# functions. cmake-lint's defaults expect two spaces and upper-case directory variables.
+format:
+  tab_size: 4
+  line_width: 80
+
+lint:
+  disabled_codes:
+    - C0103
+    - C0111
