@@ -56,8 +56,8 @@ result. The library’s full version wins at 1024.
 
 ## Baseline and validator
 
-`lazuli_baseline` is always built, even with `-DLAZULI_BUILD_BENCH=OFF`, because the tests use it
-as their correctness yardstick. It is compiled with `-O0`.
+`lazuli_baseline` is built whenever tests or benchmarks are enabled, because the tests use it as
+their independent correctness reference. It is compiled with `-O0`.
 
 `bench/tools/time_matmul.cpp` builds `build/bench/time_matmul`, the file-based validator used by `tools/validate_matmul.py`; it is not part
 of the menu. It reads two `.lzm` files and writes the result, so the NumPy script can check the

@@ -52,8 +52,10 @@ lazuli_set_warnings(lazuli)
 find_package(OpenMP REQUIRED)
 target_link_libraries(lazuli PRIVATE OpenMP::OpenMP_CXX)
 
-# The baseline implementation is the tests' yardstick, so it is always built.
-add_subdirectory(bench)
+# The frozen baseline is the tests' independent reference and the benchmark denominator.
+if(LAZULI_BUILD_TESTS OR LAZULI_BUILD_BENCH)
+    add_subdirectory(bench)
+endif()
 
 if(LAZULI_BUILD_TESTS)
     enable_testing()
