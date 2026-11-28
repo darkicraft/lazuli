@@ -16,6 +16,7 @@
 #include <operations/matmul.hpp>
 #include <operations/openblas.hpp>
 #include <operations/threads.hpp>
+#include <operations/verify.hpp>
 #include <references/simd/matmul.hpp>
 #include <string>
 
@@ -64,6 +65,7 @@ void print_full_menu() {
     std::printf("  c  Cholesky     naive / SIMD / blocked 1t / full all\n");
     std::printf("  t  thread sweep matmul at %s threads\n", threads.c_str());
     std::printf("  o  OpenBLAS     reference, if built\n");
+    std::printf("  v  verify       QR residuals and Jacobi eigenvalue checks\n");
     std::printf("  a  all staged   matmul + LU + Cholesky + thread sweep\n");
     std::printf("  i  iterations   set repetitions (current: %d)\n", repetitions);
     std::printf("  ?  help\n");
@@ -73,8 +75,8 @@ void print_full_menu() {
 void print_footer() {
     std::printf(
         "\n"
-        "[m]atmul [l]u [c]holesky [t]hreads [o]penblas [a]ll [i]terations "
-        "[?]help [q]uit\n");
+        "[m]atmul [l]u [c]holesky [t]hreads [o]penblas [v]erify\n"
+        "[a]ll [i]terations [?]help [q]uit\n");
 }
 
 void print_prompt() {
@@ -120,6 +122,10 @@ int main() {
             ran = true;
         } else if (command == "o" || command == "openblas" || command == "5") {
             lazuli::bench::run_openblas(repetitions);
+            ran = true;
+        } else if (command == "v" || command == "verify" || command == "residuals" ||
+                   command == "8") {
+            lazuli::bench::run_verify(repetitions);
             ran = true;
         } else if (command == "a" || command == "all") {
             lazuli::bench::run_matmul(repetitions);

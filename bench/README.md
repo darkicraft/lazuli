@@ -16,6 +16,7 @@ lazuli benchmark | AVX2 | 12 hardware threads | 3 iterations
   c  Cholesky     naive / SIMD / blocked 1t / full all
   t  thread sweep matmul at 1, 2, 4, 6, 8, 12 threads
   o  OpenBLAS     reference, if built
+  v  verify       QR residuals and Jacobi eigenvalue checks
   a  all staged   matmul + LU + Cholesky + thread sweep
   i  iterations   set repetitions (current: 3)
   ?  help
@@ -24,14 +25,15 @@ lazuli benchmark | AVX2 | 12 hardware threads | 3 iterations
 bench [3]>
 ```
 
-The full menu is printed at startup and by `?`; after an operation only the one-line key
-footer and the prompt are printed. Mnemonic keys are the primary interface; `1`–`7` and the full
-names (`matmul`, `lu`, `cholesky`, `threads`, `openblas`, `all`, `iterations`, `help`, `quit`)
-are aliases. Input is trimmed and case-insensitive.
+The full menu is printed at startup and by `?`; after an operation only the two-line key
+footer and the prompt are printed. Mnemonic keys are the primary interface; `1`–`8` and the full
+names (`matmul`, `lu`, `cholesky`, `threads`, `openblas`, `verify`, `all`, `iterations`, `help`,
+`quit`) are aliases. Input is trimmed and case-insensitive.
 
 `iterations` controls how many timed repetitions each stage gets; the first run is always
 discarded. The `-O0` naive stage is slow at 1024, so use `1` for a quick look. `a` runs matmul,
-LU, Cholesky and the thread sweep in sequence for a report snapshot.
+LU, Cholesky and the thread sweep in sequence for a report snapshot. `v` is separate because it
+measures correctness and time for algorithms with no staged performance path.
 
 ## Layout
 
@@ -44,6 +46,7 @@ bench/
     cholesky.cpp            run_cholesky
     threads.cpp             run_threads
     openblas.cpp            run_openblas
+    verify.cpp              run_verify
   references/
     naive/                  matmul + LU/Cholesky, compiled with -O0
     simd/                   explicit AVX2/FMA matmul + LU/Cholesky
@@ -87,6 +90,10 @@ its panels and for allocating its result; the library’s full version wins at 1
   1, 2, 4, 6, 8, 12; on 64 it is 1, 2, 4, 8, 16, 32, 64.
 - **OpenBLAS reference** — if `pkg-config` found OpenBLAS at configure time. One thread and the
   hardware thread count; the numbers are indicative only.
+- **verify** — QR orthogonality `|Q^T Q - I|` and reconstruction `|Q R - A|`, plus the Jacobi
+  eigenvalue invariants `|sum - tr A|` and `|sum^2 - ||A||_F^2|`, at 64, 128 and 256. It is not
+  staged: QR and Jacobi have a single implementation, and Jacobi is O(n^3) per sweep (about
+  0.7 s at 256 in a release build, 16 s at 512), so verification stops at modest sizes.
 
 ## Naive reference and validator
 
