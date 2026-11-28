@@ -74,18 +74,28 @@ inline std::string thread_count_label() {
     return label;
 }
 
+inline void print_stage_header() {
+    std::printf("  %-5s %9s %9s %10s %11s %10s %11s %10s\n",
+                "n",
+                "naive",
+                "SIMD",
+                "vs naive",
+                "blocked/1t",
+                "vs naive",
+                "full/all",
+                "vs naive");
+}
+
 inline void print_stage_row(std::size_t n, double naive, double simd, double blocked, double full) {
-    std::printf(
-        "  n=%-5zu naive=%7.2f  simd=%7.2f (%5.1fx)  blocked=%7.2f (%5.1fx)  "
-        "full=%7.2f (%5.1fx)\n",
-        n,
-        naive,
-        simd,
-        simd / naive,
-        blocked,
-        blocked / naive,
-        full,
-        full / naive);
+    std::printf("  %-5zu %9.2f %9.2f %9.1fx %11.2f %9.1fx %11.2f %9.1fx\n",
+                n,
+                naive,
+                simd,
+                simd / naive,
+                blocked,
+                blocked / naive,
+                full,
+                full / naive);
 }
 
 }  // namespace lazuli::bench

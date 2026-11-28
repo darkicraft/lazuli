@@ -18,6 +18,7 @@ using lazuli::detail::matrix;
 void run_openblas(int repetitions) {
 #if defined(LAZULI_HAVE_OPENBLAS)
     std::printf("\nOpenBLAS reference, double, best of %d\n", repetitions);
+    std::printf("  %-5s %9s %9s\n", "n", "1t", "all");
     const int all = static_cast<int>(std::max(1u, std::thread::hardware_concurrency()));
     for (const std::size_t n : benchmark_sizes) {
         const auto a = matrix<double>::random(n, n, 1, {-1.0, 1.0});
@@ -39,11 +40,7 @@ void run_openblas(int repetitions) {
                 openblas::set_threads(all);
             },
             [&] { openblas::matmul(n, n, n, a.data(), b.data(), out.data()); });
-        std::printf("  n=%-5zu openblas/1t=%7.2f  openblas/%dt=%7.2f\n",
-                    n,
-                    gflops(flops, one),
-                    all,
-                    gflops(flops, many));
+        std::printf("  %-5zu %9.2f %9.2f\n", n, gflops(flops, one), gflops(flops, many));
     }
 #else
     (void)repetitions;

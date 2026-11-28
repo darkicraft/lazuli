@@ -13,6 +13,7 @@ using lazuli::detail::options;
 
 void run_matmul(int repetitions) {
     std::printf("\nmatmul, double, best of %d\n", repetitions);
+    print_stage_header();
     for (const std::size_t n : benchmark_sizes) {
         const auto a = matrix<double>::random(n, n, 1, {-1.0, 1.0});
         const auto b = matrix<double>::random(n, n, 2, {-1.0, 1.0});

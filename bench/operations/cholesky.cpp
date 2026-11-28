@@ -15,6 +15,7 @@ void run_cholesky(int repetitions) {
     std::printf("\nCholesky, double, best of %d\n", repetitions);
     std::printf(
         "  (library cholesky allocates its result; naive/SIMD factor a preallocated copy)\n");
+    print_stage_header();
     for (const std::size_t n : benchmark_sizes) {
         const auto b = matrix<double>::random(n, n, 5, {-1.0, 1.0});
         matrix<double> spd = b.transpose() * b;

@@ -9,17 +9,29 @@ cmake --build build/release --target bench
 ```
 
 ```
-1) matmul       naive -> SIMD -> blocked -> full
-2) LU           naive -> SIMD -> blocked -> full
-3) Cholesky     naive -> SIMD -> blocked -> full
-4) thread sweep matmul at the generated thread counts
-5) OpenBLAS reference
-6) iterations   current: 3
-7) exit
+lazuli benchmark | AVX2 | 12 hardware threads | 3 iterations
+
+  m  matmul       naive / SIMD / blocked 1t / full all
+  l  LU           naive / SIMD / blocked 1t / full all
+  c  Cholesky     naive / SIMD / blocked 1t / full all
+  t  thread sweep matmul at 1, 2, 4, 6, 8, 12 threads
+  o  OpenBLAS     reference, if built
+  a  all staged   matmul + LU + Cholesky + thread sweep
+  i  iterations   set repetitions (current: 3)
+  ?  help
+  q  quit
+
+bench [3]>
 ```
 
+The full menu is printed at startup and by `?`; after an operation only the one-line key
+footer and the prompt are printed. Mnemonic keys are the primary interface; `1`–`7` and the full
+names (`matmul`, `lu`, `cholesky`, `threads`, `openblas`, `all`, `iterations`, `help`, `quit`)
+are aliases. Input is trimmed and case-insensitive.
+
 `iterations` controls how many timed repetitions each stage gets; the first run is always
-discarded. The `-O0` naive stage is slow at 1024, so use `1` for a quick look.
+discarded. The `-O0` naive stage is slow at 1024, so use `1` for a quick look. `a` runs matmul,
+LU, Cholesky and the thread sweep in sequence for a report snapshot.
 
 ## Layout
 

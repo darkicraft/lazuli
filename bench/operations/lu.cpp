@@ -14,6 +14,7 @@ using lazuli::detail::options;
 
 void run_lu(int repetitions) {
     std::printf("\nLU, double, best of %d\n", repetitions);
+    print_stage_header();
     for (const std::size_t n : benchmark_sizes) {
         matrix<double> original = matrix<double>::random(n, n, 3, {-1.0, 1.0});
         for (std::size_t index = 0; index < n; ++index) {
